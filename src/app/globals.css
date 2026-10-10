@@ -1,0 +1,85 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 40 20% 98%;
+    --foreground: 232 35% 14%;
+    --card: 0 0% 100%;
+    --card-foreground: 232 35% 14%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 232 35% 14%;
+    --primary: 238 62% 38%;
+    --primary-foreground: 0 0% 100%;
+    --primary-soft: 236 80% 96%;
+    --accent: 152 62% 36%;
+    --accent-foreground: 0 0% 100%;
+    --accent-soft: 145 60% 94%;
+    --secondary: 230 25% 95%;
+    --secondary-foreground: 232 35% 18%;
+    --muted: 40 12% 94%;
+    --muted-foreground: 230 10% 40%;
+    --destructive: 0 72% 48%;
+    --destructive-foreground: 0 0% 100%;
+    --warning: 36 92% 46%;
+    --warning-foreground: 0 0% 100%;
+    --border: 230 18% 89%;
+    --input: 230 18% 85%;
+    --ring: 238 62% 45%;
+    --radius: 0.85rem;
+  }
+
+  * {
+    @apply border-border;
+  }
+
+  html {
+    -webkit-tap-highlight-color: transparent;
+    text-size-adjust: 100%;
+  }
+
+  body {
+    @apply bg-background text-foreground antialiased;
+    font-feature-settings: "cv11", "ss01";
+    overflow-x: hidden;
+  }
+
+  :focus-visible {
+    @apply outline-none ring-2 ring-ring ring-offset-2 ring-offset-background;
+  }
+
+  h1, h2, h3 {
+    @apply tracking-tight;
+    text-wrap: balance;
+  }
+}
+
+@layer utilities {
+  .pb-safe {
+    padding-bottom: max(0.5rem, env(safe-area-inset-bottom));
+  }
+  .scrollbar-none {
+    scrollbar-width: none;
+  }
+  .scrollbar-none::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+/* Leaflet tweaks */
+.leaflet-container {
+  font-family: inherit;
+  z-index: 0;
+}
+.leaflet-popup-content-wrapper {
+  border-radius: 0.85rem;
+  box-shadow: 0 12px 32px -8px rgba(30, 27, 75, 0.25);
+}
+.leaflet-popup-content {
+  margin: 12px 14px;
+}
+.qollab-marker {
+  background: transparent;
+  border: none;
+}

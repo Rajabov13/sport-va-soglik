@@ -1,0 +1,709 @@
+// QO'LLAB — relational data model
+// PostgreSQL + Prisma ORM
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+// ───────────────────────────── Enums ─────────────────────────────
+
+enum Role {
+  USER
+  VOLUNTEER
+  ORGANIZATION
+  ADMIN
+}
+
+enum UserStatus {
+  ACTIVE
+  SUSPENDED
+}
+
+enum Urgency {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
+
+enum RequestStatus {
+  DRAFT
+  PENDING
+  VERIFIED
+  MATCHING
+  ACCEPTED
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+  REJECTED
+}
+
+enum AssignmentStatus {
+  ACTIVE
+  COMPLETION_REQUESTED
+  COMPLETED
+  CANCELLED
+}
+
+enum ContactMethod {
+  CHAT
+  PHONE
+  EMAIL
+}
+
+enum NotificationType {
+  NEW_MATCH
+  REQUEST_ACCEPTED
+  STATUS_CHANGED
+  NEW_MESSAGE
+  REQUEST_COMPLETED
+  COMPLETION_REQUESTED
+  NEW_REVIEW
+  ACHIEVEMENT_UNLOCKED
+  REQUEST_MODERATED
+  ORGANIZATION_UPDATE
+  CAMPAIGN_UPDATE
+}
+
+enum ReportReason {
+  FAKE_REQUEST
+  ABUSE
+  INAPPROPRIATE_CONTENT
+  SUSPICIOUS_USER
+  OTHER
+}
+
+enum ReportStatus {
+  OPEN
+  RESOLVED
+  DISMISSED
+}
+
+enum ReportTarget {
+  REQUEST
+  USER
+  CONVERSATION
+  MESSAGE
+}
+
+enum OrganizationStatus {
+  PENDING
+  VERIFIED
+  REJECTED
+  SUSPENDED
+}
+
+enum MemberRole {
+  OWNER
+  COORDINATOR
+  VOLUNTEER
+}
+
+enum MemberStatus {
+  PENDING
+  ACTIVE
+  REMOVED
+}
+
+enum CampaignStatus {
+  DRAFT
+  ACTIVE
+  COMPLETED
+  CANCELLED
+}
+
+// ───────────────────────────── Identity ─────────────────────────────
+
+model User {
+  id              String     @id @default(cuid())
+  email           String     @unique
+  passwordHash    String?
+  name            String
+  role            Role       @default(USER)
+  status          UserStatus @default(ACTIVE)
+  locale          String     @default("uz")
+  phone           String?
+  avatarUrl       String?
+  emailVerifiedAt DateTime?
+  suspendedReason String?
+  lastSeenAt      DateTime?
+  isDemo          Boolean    @default(false)
+  createdAt       DateTime   @default(now())
+  updatedAt       DateTime   @updatedAt
+  deletedAt       DateTime?
+
+  profile           Profile?
+  volunteerProfile  VolunteerProfile?
+  sessions          Session[]
+  accounts          Account[]
+  ownedOrganizations Organization[]          @relation("OrganizationOwner")
+  memberships       OrganizationMember[]
+  requests          Request[]               @relation("Requester")
+  assignments       RequestAssignment[]     @relation("AssignmentVolunteer")
+  matches           RequestMatch[]          @relation("MatchVolunteer")
+  messages          Message[]
+  participants      ConversationParticipant[]
+  notifications     Notification[]
+  reviewsWritten    Review[]                @relation("ReviewAuthor")
+  reviewsReceived   Review[]                @relation("ReviewTarget")
+  achievements      UserAchievement[]
+  reportsFiled      Report[]                @relation("Reporter")
+  reportsAgainst    Report[]                @relation("ReportedUser")
+  reportsResolved   Report[]                @relation("ReportResolver")
+  campaignParticipations CampaignParticipant[]
+  statusChanges     RequestStatusHistory[]
+  auditLogs         AuditLog[]
+
+  @@index([role, status])
+  @@index([createdAt])
+}
+
+model Session {
+  id         String   @id @default(cuid())
+  tokenHash  String   @unique
+  userId     String
+  expiresAt  DateTime
+  userAgent  String?
+  ip         String?
+  createdAt  DateTime @default(now())
+  lastUsedAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([expiresAt])
+}
+
+model Account {
+  id                String   @id @default(cuid())
+  userId            String
+  provider          String
+  providerAccountId String
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@index([userId])
+}
+
+model Profile {
+  id                 String    @id @default(cuid())
+  userId             String    @unique
+  bio                String?
+  locationId         String?
+  address            String?
+  latitude           Float?
+  longitude          Float?
+  emailNotifications Boolean   @default(true)
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+  deletedAt          DateTime?
+
+  user     User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  location Location? @relation(fields: [locationId], references: [id])
+}
+
+model VolunteerProfile {
+  id                 String   @id @default(cuid())
+  userId             String   @unique
+  skills             String[]
+  radiusKm           Int      @default(10)
+  latitude           Float?
+  longitude          Float?
+  isAvailableNow     Boolean  @default(true)
+  xp                 Int      @default(0)
+  ratingAvg          Float    @default(0)
+  ratingCount        Int      @default(0)
+  completedCount     Int      @default(0)
+  cancelledCount     Int      @default(0)
+  hoursTotal         Float    @default(0)
+  impactScore        Int      @default(0)
+  peopleHelped       Int      @default(0)
+  fastResponses      Int      @default(0)
+  avgResponseMinutes Float?
+  isVerified         Boolean  @default(false)
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+  deletedAt          DateTime?
+
+  user               User                       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  categories         VolunteerCategory[]
+  availability       VolunteerAvailability[]
+  preferredLocations VolunteerPreferredLocation[]
+
+  @@index([xp])
+  @@index([isAvailableNow])
+}
+
+model VolunteerCategory {
+  volunteerProfileId String
+  categoryId         String
+
+  volunteerProfile VolunteerProfile @relation(fields: [volunteerProfileId], references: [id], onDelete: Cascade)
+  category         Category         @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+
+  @@id([volunteerProfileId, categoryId])
+  @@index([categoryId])
+}
+
+model VolunteerAvailability {
+  id                 String   @id @default(cuid())
+  volunteerProfileId String
+  dayOfWeek          Int // 0 = Sunday … 6 = Saturday
+  startMinute        Int // minutes from 00:00
+  endMinute          Int
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  volunteerProfile VolunteerProfile @relation(fields: [volunteerProfileId], references: [id], onDelete: Cascade)
+
+  @@index([volunteerProfileId, dayOfWeek])
+}
+
+model VolunteerPreferredLocation {
+  volunteerProfileId String
+  locationId         String
+
+  volunteerProfile VolunteerProfile @relation(fields: [volunteerProfileId], references: [id], onDelete: Cascade)
+  location         Location         @relation(fields: [locationId], references: [id], onDelete: Cascade)
+
+  @@id([volunteerProfileId, locationId])
+}
+
+// ───────────────────────────── Reference data ─────────────────────────────
+
+model Category {
+  id            String    @id @default(cuid())
+  slug          String    @unique
+  icon          String
+  color         String
+  nameUz        String
+  nameRu        String
+  nameEn        String
+  relatedSkills String[]
+  sortOrder     Int       @default(0)
+  isActive      Boolean   @default(true)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  deletedAt     DateTime?
+
+  requests   Request[]
+  campaigns  Campaign[]
+  volunteers VolunteerCategory[]
+}
+
+model Location {
+  id        String   @id @default(cuid())
+  slug      String   @unique
+  city      String
+  region    String
+  latitude  Float
+  longitude Float
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  requests      Request[]
+  profiles      Profile[]
+  organizations Organization[]
+  campaigns     Campaign[]
+  volunteers    VolunteerPreferredLocation[]
+}
+
+// ───────────────────────────── Organizations ─────────────────────────────
+
+model Organization {
+  id          String             @id @default(cuid())
+  ownerId     String
+  name        String
+  slug        String             @unique
+  description String
+  type        String             @default("NGO")
+  website     String?
+  phone       String?
+  email       String?
+  logoUrl     String?
+  locationId  String?
+  address     String?
+  latitude    Float?
+  longitude   Float?
+  status      OrganizationStatus @default(PENDING)
+  verifiedAt  DateTime?
+  createdAt   DateTime           @default(now())
+  updatedAt   DateTime           @updatedAt
+  deletedAt   DateTime?
+
+  owner     User                 @relation("OrganizationOwner", fields: [ownerId], references: [id])
+  location  Location?            @relation(fields: [locationId], references: [id])
+  members   OrganizationMember[]
+  campaigns Campaign[]
+  requests  Request[]
+
+  @@index([status])
+  @@index([ownerId])
+}
+
+model OrganizationMember {
+  id             String       @id @default(cuid())
+  organizationId String
+  userId         String
+  role           MemberRole   @default(VOLUNTEER)
+  status         MemberStatus @default(PENDING)
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([organizationId, userId])
+  @@index([userId])
+}
+
+model Campaign {
+  id             String         @id @default(cuid())
+  organizationId String
+  title          String
+  slug           String         @unique
+  description    String
+  categoryId     String?
+  locationId     String?
+  coverUrl       String?
+  startsAt       DateTime
+  endsAt         DateTime?
+  goalHelps      Int            @default(50)
+  goalVolunteers Int            @default(20)
+  status         CampaignStatus @default(ACTIVE)
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+  deletedAt      DateTime?
+
+  organization Organization          @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  category     Category?             @relation(fields: [categoryId], references: [id])
+  location     Location?             @relation(fields: [locationId], references: [id])
+  participants CampaignParticipant[]
+  requests     Request[]
+
+  @@index([status, startsAt])
+  @@index([organizationId])
+}
+
+model CampaignParticipant {
+  id         String   @id @default(cuid())
+  campaignId String
+  userId     String
+  createdAt  DateTime @default(now())
+
+  campaign Campaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([campaignId, userId])
+}
+
+// ───────────────────────────── Requests ─────────────────────────────
+
+model Request {
+  id                 String          @id @default(cuid())
+  requesterId        String
+  organizationId     String?
+  campaignId         String?
+  categoryId         String
+  title              String
+  description        String
+  urgency            Urgency         @default(MEDIUM)
+  status             RequestStatus   @default(DRAFT)
+  address            String
+  locationId         String?
+  latitude           Float
+  longitude          Float
+  preferredDate      DateTime?
+  contactPreferences ContactMethod[]
+  contactPhone       String?
+  additionalInfo     String?
+  peopleCount        Int             @default(1)
+  estimatedHours     Float           @default(2)
+  moderationNote     String?
+  submittedAt        DateTime?
+  verifiedAt         DateTime?
+  matchingAt         DateTime?
+  acceptedAt         DateTime?
+  startedAt          DateTime?
+  completedAt        DateTime?
+  cancelledAt        DateTime?
+  createdAt          DateTime        @default(now())
+  updatedAt          DateTime        @updatedAt
+  deletedAt          DateTime?
+
+  requester     User                   @relation("Requester", fields: [requesterId], references: [id])
+  organization  Organization?          @relation(fields: [organizationId], references: [id])
+  campaign      Campaign?              @relation(fields: [campaignId], references: [id])
+  category      Category               @relation(fields: [categoryId], references: [id])
+  location      Location?              @relation(fields: [locationId], references: [id])
+  images        RequestImage[]
+  matches       RequestMatch[]
+  assignments   RequestAssignment[]
+  conversation  Conversation?
+  reviews       Review[]
+  reports       Report[]
+  statusHistory RequestStatusHistory[]
+
+  @@index([status, urgency])
+  @@index([categoryId])
+  @@index([requesterId])
+  @@index([organizationId])
+  @@index([campaignId])
+  @@index([createdAt])
+  @@index([latitude, longitude])
+}
+
+model RequestImage {
+  id         String   @id @default(cuid())
+  requestId  String?
+  uploaderId String
+  url        String
+  storageKey String   @unique
+  mimeType   String
+  size       Int
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  request Request? @relation(fields: [requestId], references: [id], onDelete: Cascade)
+
+  @@index([requestId])
+  @@index([uploaderId])
+}
+
+model RequestMatch {
+  id          String    @id @default(cuid())
+  requestId   String
+  volunteerId String
+  score       Int
+  breakdown   Json
+  rank        Int
+  algorithm   String    @default("rule-based-v1")
+  notifiedAt  DateTime?
+  declinedAt  DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  request   Request @relation(fields: [requestId], references: [id], onDelete: Cascade)
+  volunteer User    @relation("MatchVolunteer", fields: [volunteerId], references: [id], onDelete: Cascade)
+
+  @@unique([requestId, volunteerId])
+  @@index([volunteerId, score])
+}
+
+model RequestAssignment {
+  id                    String           @id @default(cuid())
+  requestId             String
+  volunteerId           String
+  status                AssignmentStatus @default(ACTIVE)
+  responseMinutes       Float?
+  acceptedAt            DateTime         @default(now())
+  startedAt             DateTime?
+  completionRequestedAt DateTime?
+  completedAt           DateTime?
+  cancelledAt           DateTime?
+  hoursSpent            Float?
+  volunteerNote         String?
+  createdAt             DateTime         @default(now())
+  updatedAt             DateTime         @updatedAt
+
+  request   Request @relation(fields: [requestId], references: [id], onDelete: Cascade)
+  volunteer User    @relation("AssignmentVolunteer", fields: [volunteerId], references: [id])
+
+  @@index([requestId, status])
+  @@index([volunteerId, status])
+}
+
+model RequestStatusHistory {
+  id         String         @id @default(cuid())
+  requestId  String
+  fromStatus RequestStatus?
+  toStatus   RequestStatus
+  actorId    String?
+  note       String?
+  createdAt  DateTime       @default(now())
+
+  request Request @relation(fields: [requestId], references: [id], onDelete: Cascade)
+  actor   User?   @relation(fields: [actorId], references: [id])
+
+  @@index([requestId, createdAt])
+}
+
+// ───────────────────────────── Communication ─────────────────────────────
+
+model Conversation {
+  id            String    @id @default(cuid())
+  requestId     String?   @unique
+  lastMessageAt DateTime?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  request      Request?                  @relation(fields: [requestId], references: [id], onDelete: Cascade)
+  participants ConversationParticipant[]
+  messages     Message[]
+  reports      Report[]
+
+  @@index([lastMessageAt])
+}
+
+model ConversationParticipant {
+  id             String    @id @default(cuid())
+  conversationId String
+  userId         String
+  lastReadAt     DateTime?
+  typingAt       DateTime?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  conversation Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([conversationId, userId])
+  @@index([userId])
+}
+
+model Message {
+  id             String    @id @default(cuid())
+  conversationId String
+  senderId       String
+  body           String
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+  deletedAt      DateTime?
+
+  conversation Conversation        @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  sender       User                @relation(fields: [senderId], references: [id])
+  attachments  MessageAttachment[]
+  reports      Report[]
+
+  @@index([conversationId, createdAt])
+}
+
+model MessageAttachment {
+  id         String   @id @default(cuid())
+  messageId  String
+  url        String
+  storageKey String   @unique
+  mimeType   String
+  size       Int
+  createdAt  DateTime @default(now())
+
+  message Message @relation(fields: [messageId], references: [id], onDelete: Cascade)
+}
+
+model Notification {
+  id        String           @id @default(cuid())
+  userId    String
+  type      NotificationType
+  data      Json
+  link      String?
+  readAt    DateTime?
+  createdAt DateTime         @default(now())
+  updatedAt DateTime         @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, readAt])
+  @@index([userId, createdAt])
+}
+
+// ───────────────────────────── Reputation ─────────────────────────────
+
+model Review {
+  id        String    @id @default(cuid())
+  requestId String
+  authorId  String
+  targetId  String
+  rating    Int
+  comment   String?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  request Request @relation(fields: [requestId], references: [id], onDelete: Cascade)
+  author  User    @relation("ReviewAuthor", fields: [authorId], references: [id])
+  target  User    @relation("ReviewTarget", fields: [targetId], references: [id])
+
+  @@unique([requestId, authorId])
+  @@index([targetId])
+}
+
+model Achievement {
+  id        String   @id @default(cuid())
+  code      String   @unique
+  icon      String
+  xpReward  Int      @default(0)
+  threshold Int      @default(1)
+  sortOrder Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  users UserAchievement[]
+}
+
+model UserAchievement {
+  id            String   @id @default(cuid())
+  userId        String
+  achievementId String
+  unlockedAt    DateTime @default(now())
+
+  user        User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  achievement Achievement @relation(fields: [achievementId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, achievementId])
+}
+
+// ───────────────────────────── Trust & safety ─────────────────────────────
+
+model Report {
+  id             String       @id @default(cuid())
+  reporterId     String
+  targetType     ReportTarget
+  requestId      String?
+  reportedUserId String?
+  conversationId String?
+  messageId      String?
+  reason         ReportReason
+  details        String?
+  status         ReportStatus @default(OPEN)
+  resolvedById   String?
+  resolvedAt     DateTime?
+  resolutionNote String?
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  reporter     User          @relation("Reporter", fields: [reporterId], references: [id])
+  reportedUser User?         @relation("ReportedUser", fields: [reportedUserId], references: [id])
+  resolvedBy   User?         @relation("ReportResolver", fields: [resolvedById], references: [id])
+  request      Request?      @relation(fields: [requestId], references: [id], onDelete: SetNull)
+  conversation Conversation? @relation(fields: [conversationId], references: [id], onDelete: SetNull)
+  message      Message?      @relation(fields: [messageId], references: [id], onDelete: SetNull)
+
+  @@index([status, createdAt])
+  @@index([targetType])
+}
+
+model AuditLog {
+  id         String   @id @default(cuid())
+  actorId    String?
+  action     String
+  entityType String
+  entityId   String?
+  metadata   Json?
+  ip         String?
+  createdAt  DateTime @default(now())
+
+  actor User? @relation(fields: [actorId], references: [id])
+
+  @@index([entityType, entityId])
+  @@index([actorId])
+  @@index([createdAt])
+}
