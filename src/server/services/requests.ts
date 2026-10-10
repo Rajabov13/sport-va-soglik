@@ -1,4 +1,6 @@
 import type { Prisma, RequestStatus } from "@prisma/client";
+import { asStringArray } from "@/lib/utils";
+import type { CONTACT_METHODS } from "@/schemas/request";
 import { db, type Tx } from "@/server/db";
 import { ApiError, Errors } from "@/server/http/errors";
 import type { SessionUser } from "@/server/auth/session";
@@ -76,7 +78,7 @@ async function submit(requestId: string, actorId: string) {
     db.request.count({
       where: {
         requesterId: request.requesterId,
-        title: { equals: request.title, mode: "insensitive" },
+        title: { equals: request.title },
         id: { not: requestId },
         createdAt: { gte: since },
         deletedAt: null,
@@ -273,9 +275,9 @@ export async function listRequests(actor: Actor, q: RequestListQuery) {
   if (q.urgency) where.urgency = q.urgency;
   if (q.q) {
     where.OR = [
-      { title: { contains: q.q, mode: "insensitive" } },
-      { description: { contains: q.q, mode: "insensitive" } },
-      { address: { contains: q.q, mode: "insensitive" } },
+      { title: { contains: q.q } },
+      { description: { contains: q.q } },
+      { address: { contains: q.q } },
     ];
   }
 
@@ -390,7 +392,7 @@ export async function getRequestDetail(actor: SessionUser | null, id: string) {
     latitude: privateView ? r.latitude : Math.round(r.latitude * 100) / 100,
     longitude: privateView ? r.longitude : Math.round(r.longitude * 100) / 100,
     preferredDate: r.preferredDate,
-    contactPreferences: r.contactPreferences,
+    contactPreferences: asStringArray(r.contactPreferences) as (typeof CONTACT_METHODS)[number][],
     contactPhone: privateView ? r.contactPhone : null,
     additionalInfo: r.additionalInfo,
     peopleCount: r.peopleCount,

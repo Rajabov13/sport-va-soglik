@@ -4,6 +4,7 @@ import { Errors } from "@/server/http/errors";
 import { destroyAllSessions } from "@/server/auth/session";
 import type { CategoryInput } from "@/schemas/misc";
 import { DEFAULT_CENTER } from "@/lib/geo";
+import { asStringArray } from "@/lib/utils";
 import { approvePendingRequest, rejectRequest } from "./requests";
 import { computeMatches } from "./matching";
 import { notify } from "./notifications";
@@ -31,7 +32,7 @@ export async function adminListUsers(q: { q?: string; role?: Role; status?: stri
     deletedAt: null,
     ...(q.role ? { role: q.role } : {}),
     ...(q.status === "ACTIVE" || q.status === "SUSPENDED" ? { status: q.status } : {}),
-    ...(q.q ? { OR: [{ name: { contains: q.q, mode: "insensitive" } }, { email: { contains: q.q, mode: "insensitive" } }] } : {}),
+    ...(q.q ? { OR: [{ name: { contains: q.q } }, { email: { contains: q.q } }] } : {}),
   };
   const orderBy: Prisma.UserOrderByWithRelationInput = q.sort === "name" ? { name: "asc" } : { createdAt: q.sort === "oldest" ? "asc" : "desc" };
   const [items, total] = await Promise.all([
@@ -93,7 +94,7 @@ export async function adminListRequests(q: { q?: string; status?: string; page: 
   const where: Prisma.RequestWhereInput = {
     deletedAt: null,
     ...(q.status ? { status: q.status as RequestStatus } : { status: { not: "DRAFT" } }),
-    ...(q.q ? { OR: [{ title: { contains: q.q, mode: "insensitive" } }, { requester: { name: { contains: q.q, mode: "insensitive" } } }] } : {}),
+    ...(q.q ? { OR: [{ title: { contains: q.q } }, { requester: { name: { contains: q.q } } }] } : {}),
   };
   const [items, total] = await Promise.all([
     db.request.findMany({
@@ -142,7 +143,7 @@ export async function adminListOrganizations(q: { q?: string; status?: string; p
   const where: Prisma.OrganizationWhereInput = {
     deletedAt: null,
     ...(q.status ? { status: q.status as OrganizationStatus } : {}),
-    ...(q.q ? { name: { contains: q.q, mode: "insensitive" } } : {}),
+    ...(q.q ? { name: { contains: q.q } } : {}),
   };
   const [items, total] = await Promise.all([
     db.organization.findMany({
@@ -216,7 +217,7 @@ export async function adminReportAction(adminId: string, reportId: string, input
 
 export async function adminListCategories() {
   const cats = await db.category.findMany({ where: { deletedAt: null }, orderBy: { sortOrder: "asc" }, include: { _count: { select: { requests: true } } } });
-  return cats;
+  return cats.map((c) => ({ ...c, relatedSkills: asStringArray(c.relatedSkills) }));
 }
 
 export async function adminUpsertCategory(adminId: string, input: CategoryInput, id?: string) {

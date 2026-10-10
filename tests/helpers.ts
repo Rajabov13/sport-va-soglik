@@ -11,8 +11,12 @@ type Handler = (req: NextRequest, ctx: { params: Promise<Record<string, string>>
 /** Clears all rows between test files. Guarded so it can only ever run against the test database. */
 export async function resetDb() {
   if (!/test/i.test(process.env.DATABASE_URL ?? "")) throw new Error("resetDb may only run against the test database");
-  const tables = await db.$queryRaw<{ tablename: string }[]>`SELECT tablename FROM pg_tables WHERE schemaname = 'public' AND tablename <> '_prisma_migrations'`;
-  await db.$executeRawUnsafe(`TRUNCATE ${tables.map((t) => `"public"."${t.tablename}"`).join(", ")} CASCADE`);
+  const tables = await db.$queryRawUnsafe<{ name: string }[]>(
+    "SELECT name FROM sqlite_master WHERE type = 'table' AND name NOT LIKE 'sqlite_%' AND name <> '_prisma_migrations'",
+  );
+  await db.$executeRawUnsafe("PRAGMA foreign_keys = OFF");
+  for (const t of tables) await db.$executeRawUnsafe(`DELETE FROM "${t.name}"`);
+  await db.$executeRawUnsafe("PRAGMA foreign_keys = ON");
 }
 
 export async function seedReference() {

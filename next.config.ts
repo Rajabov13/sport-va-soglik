@@ -30,6 +30,8 @@ const securityHeaders = [
 
 const nextConfig: NextConfig = {
   poweredByHeader: false,
+  // Ship the SQLite database built during `npm run build` with the serverless functions.
+  outputFileTracingIncludes: { "/**": ["./prisma/qollab.db"] },
   reactStrictMode: true,
   images: {
     remotePatterns: [{ protocol: "https", hostname: "lh3.googleusercontent.com" }],

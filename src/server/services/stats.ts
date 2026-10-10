@@ -1,4 +1,4 @@
-import { Prisma } from "@prisma/client";
+import type { Prisma } from "@prisma/client";
 import { db } from "@/server/db";
 import { startOfToday } from "@/lib/format";
 
@@ -61,56 +61,68 @@ export interface ChartData {
   urgency: { urgency: string; count: number }[];
 }
 
-export async function getChartData(weeks = 12, filter: { organizationId?: string } = {}): Promise<ChartData> {
-  const since = new Date(Date.now() - weeks * 7 * 24 * 60 * 60 * 1000);
-  const orgSql = filter.organizationId ? Prisma.sql`AND r."organizationId" = ${filter.organizationId}` : Prisma.empty;
+const WEEK_MS = 7 * 24 * 60 * 60 * 1000;
 
-  const [created, completed, cats, categories, activity, geo, urgency] = await Promise.all([
-    db.$queryRaw<{ week: Date; count: bigint }[]>`
-      SELECT date_trunc('week', r."createdAt") AS week, COUNT(*)::bigint AS count
-      FROM "Request" r WHERE r."deletedAt" IS NULL AND r."status" <> 'DRAFT' AND r."createdAt" >= ${since} ${orgSql}
-      GROUP BY 1 ORDER BY 1`,
-    db.$queryRaw<{ week: Date; count: bigint }[]>`
-      SELECT date_trunc('week', r."completedAt") AS week, COUNT(*)::bigint AS count
-      FROM "Request" r WHERE r."deletedAt" IS NULL AND r."status" = 'COMPLETED' AND r."completedAt" >= ${since} ${orgSql}
-      GROUP BY 1 ORDER BY 1`,
-    db.request.groupBy({
-      by: ["categoryId"],
-      where: { deletedAt: null, status: { not: "DRAFT" }, ...(filter.organizationId ? { organizationId: filter.organizationId } : {}) },
-      _count: { _all: true },
-    }),
+/** Monday 00:00 UTC of the week containing `d` (ISO date string key). */
+function weekKey(d: Date) {
+  const x = new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate()));
+  x.setUTCDate(x.getUTCDate() - ((x.getUTCDay() + 6) % 7));
+  return x.toISOString().slice(0, 10);
+}
+
+/** Chart series aggregated in application code (portable across databases; datasets are small and bounded by the period). */
+export async function getChartData(weeks = 12, filter: { organizationId?: string } = {}): Promise<ChartData> {
+  const since = new Date(Date.now() - weeks * WEEK_MS);
+  const orgWhere: Prisma.RequestWhereInput = filter.organizationId ? { organizationId: filter.organizationId } : {};
+  const base: Prisma.RequestWhereInput = { deletedAt: null, status: { not: "DRAFT" }, ...orgWhere };
+
+  const [recent, completedRecent, cats, categories, activity, geo, urgency, locations] = await Promise.all([
+    db.request.findMany({ where: { ...base, createdAt: { gte: since } }, select: { createdAt: true } }),
+    db.request.findMany({ where: { ...base, status: "COMPLETED", completedAt: { gte: since } }, select: { completedAt: true } }),
+    db.request.groupBy({ by: ["categoryId"], where: base, _count: { _all: true } }),
     db.category.findMany({ where: { deletedAt: null } }),
-    db.$queryRaw<{ week: Date; volunteers: bigint; hours: number | null }[]>`
-      SELECT date_trunc('week', a."completedAt") AS week, COUNT(DISTINCT a."volunteerId")::bigint AS volunteers, SUM(a."hoursSpent")::float AS hours
-      FROM "RequestAssignment" a JOIN "Request" r ON r.id = a."requestId"
-      WHERE a."status" = 'COMPLETED' AND a."completedAt" >= ${since} ${orgSql}
-      GROUP BY 1 ORDER BY 1`,
-    db.$queryRaw<{ city: string | null; requests: bigint; completed: bigint }[]>`
-      SELECT l."city" AS city, COUNT(*)::bigint AS requests, COUNT(*) FILTER (WHERE r."status" = 'COMPLETED')::bigint AS completed
-      FROM "Request" r LEFT JOIN "Location" l ON l.id = r."locationId"
-      WHERE r."deletedAt" IS NULL AND r."status" <> 'DRAFT' ${orgSql}
-      GROUP BY l."city" ORDER BY requests DESC LIMIT 10`,
-    db.request.groupBy({
-      by: ["urgency"],
-      where: { deletedAt: null, status: { not: "DRAFT" }, ...(filter.organizationId ? { organizationId: filter.organizationId } : {}) },
-      _count: { _all: true },
+    db.requestAssignment.findMany({
+      where: { status: "COMPLETED", completedAt: { gte: since }, request: orgWhere },
+      select: { completedAt: true, volunteerId: true, hoursSpent: true },
     }),
+    db.request.groupBy({ by: ["locationId", "status"], where: base, _count: { _all: true } }),
+    db.request.groupBy({ by: ["urgency"], where: base, _count: { _all: true } }),
+    db.location.findMany({ select: { id: true, city: true } }),
   ]);
 
-  // Build a continuous week axis so charts never have gaps.
+  // Continuous week axis so charts never have gaps.
   const weekKeys: string[] = [];
-  const start = new Date(since);
-  const day = (start.getUTCDay() + 6) % 7; // Monday-based weeks like date_trunc('week')
-  start.setUTCDate(start.getUTCDate() - day);
-  start.setUTCHours(0, 0, 0, 0);
-  for (let i = 0; i <= weeks; i++) {
-    const d = new Date(start.getTime() + i * 7 * 24 * 60 * 60 * 1000);
-    weekKeys.push(d.toISOString().slice(0, 10));
+  const first = new Date(weekKey(since));
+  for (let i = 0; i <= weeks; i++) weekKeys.push(new Date(first.getTime() + i * WEEK_MS).toISOString().slice(0, 10));
+
+  const count = (dates: (Date | null)[]) => {
+    const m = new Map<string, number>();
+    for (const d of dates) if (d) m.set(weekKey(d), (m.get(weekKey(d)) ?? 0) + 1);
+    return m;
+  };
+  const createdMap = count(recent.map((r) => r.createdAt));
+  const completedMap = count(completedRecent.map((r) => r.completedAt));
+
+  const activityMap = new Map<string, { volunteers: Set<string>; hours: number }>();
+  for (const a of activity) {
+    if (!a.completedAt) continue;
+    const k = weekKey(a.completedAt);
+    const e = activityMap.get(k) ?? { volunteers: new Set<string>(), hours: 0 };
+    e.volunteers.add(a.volunteerId);
+    e.hours += a.hoursSpent ?? 0;
+    activityMap.set(k, e);
   }
-  const key = (d: Date) => new Date(d).toISOString().slice(0, 10);
-  const createdMap = new Map(created.map((r) => [key(r.week), Number(r.count)]));
-  const completedMap = new Map(completed.map((r) => [key(r.week), Number(r.count)]));
-  const activityMap = new Map(activity.map((r) => [key(r.week), r]));
+
+  const cityById = new Map(locations.map((l) => [l.id, l.city]));
+  const geoMap = new Map<string, { requests: number; completed: number }>();
+  for (const g of geo) {
+    const city = (g.locationId && cityById.get(g.locationId)) || "—";
+    const e = geoMap.get(city) ?? { requests: 0, completed: 0 };
+    e.requests += g._count._all;
+    if (g.status === "COMPLETED") e.completed += g._count._all;
+    geoMap.set(city, e);
+  }
+
   const catMap = new Map(categories.map((c) => [c.id, c]));
 
   return {
@@ -130,9 +142,12 @@ export async function getChartData(weeks = 12, filter: { organizationId?: string
       .sort((a, b) => b.count - a.count),
     volunteerActivity: weekKeys.map((w) => {
       const r = activityMap.get(w);
-      return { week: w, volunteers: r ? Number(r.volunteers) : 0, hours: r ? Math.round(r.hours ?? 0) : 0 };
+      return { week: w, volunteers: r ? r.volunteers.size : 0, hours: r ? Math.round(r.hours) : 0 };
     }),
-    geography: geo.map((g) => ({ city: g.city ?? "—", requests: Number(g.requests), completed: Number(g.completed) })),
+    geography: [...geoMap.entries()]
+      .map(([city, v]) => ({ city, ...v }))
+      .sort((a, b) => b.requests - a.requests)
+      .slice(0, 10),
     urgency: urgency.map((u) => ({ urgency: u.urgency, count: u._count._all })),
   };
 }

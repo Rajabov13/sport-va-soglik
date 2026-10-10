@@ -58,7 +58,7 @@ Request ─▶ automated checks ─▶ VERIFIED ─▶ smart matching ─▶ vol
 - **Tailwind CSS** with shadcn/ui-style components on **Radix UI** primitives · **Framer Motion** · **Lucide** icons
 - **TanStack Query** · **React Hook Form** + **Zod** (shared client/server schemas)
 - **Recharts** (charts) · **Leaflet / react-leaflet** (maps, keyless tiles by default)
-- **PostgreSQL** + **Prisma ORM**
+- **SQLite** (embedded file database — no database server or external service) + **Prisma ORM**
 - **Vitest** (unit + API integration) · **Playwright** (end-to-end)
 
 ## Architecture
@@ -77,7 +77,7 @@ src/
 │   ├── domain/               # Pure business rules: state machine, gamification, moderation, classifier
 │   ├── services/             # Use cases: requests, matching, conversations, stats, admin, …
 │   │   └── matching/         # MatchingStrategy interface + rule-based implementation
-│   ├── storage/              # Upload validation + local / Supabase storage drivers
+│   ├── storage/              # Upload validation + local disk storage
 │   ├── email/                # Email channel abstraction
 │   └── ai/                   # Optional Gemini classification with keyword fallback
 ├── schemas/                  # Zod schemas shared by forms and API
@@ -110,22 +110,13 @@ so only one volunteer can win a race.
 
 ## Getting started
 
-Requirements: **Node.js ≥ 20**, **PostgreSQL ≥ 14**.
+Requirements: **Node.js ≥ 20**. Nothing else — no database server, no Supabase, no external services.
 
 ```bash
 git clone <repo> && cd <repo>
 npm install
-cp .env.example .env                  # adjust DATABASE_URL / SESSION_SECRET
-npm run db:migrate                    # create the schema (prisma migrate dev)
-npm run db:seed                       # load realistic demo data
-npm run dev                           # http://localhost:3000
-```
-
-Quick local PostgreSQL with Docker:
-
-```bash
-docker run -d --name qollab-db -p 5432:5432 \
-  -e POSTGRES_USER=qollab -e POSTGRES_PASSWORD=qollab -e POSTGRES_DB=qollab postgres:16
+cp .env.example .env                  # optional locally; set SESSION_SECRET in production
+npm run dev                           # creates prisma/qollab.db with demo data on first run → http://localhost:3000
 ```
 
 ## Environment variables
@@ -134,12 +125,11 @@ All variables are documented in [`.env.example`](.env.example). The essentials:
 
 | Variable | Required | Purpose |
 |---|---|---|
-| `DATABASE_URL` / `DIRECT_URL` | ✅ | PostgreSQL connection (pooled / direct) |
 | `SESSION_SECRET` | ✅ prod | ≥ 32 random chars, signs session token digests and OAuth state |
 | `APP_URL` | ✅ prod | Public URL (OAuth callback, emails, sitemap, origin checks) |
 | `DEMO_MODE` | – | `true` enables one-click demo accounts |
 | `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` | – | Google sign-in |
-| `STORAGE_DRIVER`, `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, `SUPABASE_STORAGE_BUCKET` | – | Uploads in Supabase Storage (needed on Vercel) |
+| `UPLOAD_DIR` | – | Folder for uploaded photos (default `./storage/uploads`, `/tmp` on Vercel) |
 | `EMAIL_PROVIDER`, `RESEND_API_KEY`, `EMAIL_FROM` | – | Email notifications |
 | `UPSTASH_REDIS_REST_URL` / `UPSTASH_REDIS_REST_TOKEN` | – | Distributed rate limiting |
 | `GEMINI_API_KEY`, `GEMINI_MODEL`, `GEMINI_FALLBACK_MODEL` | – | AI-assisted category/urgency suggestion — primary model, then a lighter fallback model on overload, then the keyword classifier |
@@ -151,10 +141,14 @@ the map uses free CARTO/OSM tiles.
 
 ## Database, migrations & seed
 
+The database is a single SQLite file, `prisma/qollab.db` (git-ignored). It is created automatically:
+`npm run dev` and `npm run build` run `db:setup`, which applies the migrations and loads the demo data
+when the database is empty. Existing data is never overwritten by these commands.
+
 ```bash
-npm run db:migrate     # development: create/apply migrations
-npm run db:deploy      # production/CI: apply committed migrations (non-interactive)
-npm run db:seed        # WIPES the target database and loads demo data
+npm run db:setup       # apply migrations + load demo data if the database is empty
+npm run db:seed        # WIPES the database and reloads fresh demo data
+npm run db:migrate     # development: create a new migration after changing prisma/schema.prisma
 ```
 
 The seed creates realistic, fictional data for Uzbekistan: 9 categories, 14 cities, 30 requesters,
@@ -194,13 +188,13 @@ Demo numbers come from the seeded database and are labelled *Demo data* in the U
 ```bash
 npm run typecheck      # TypeScript
 npm run lint           # ESLint
-npm test               # Vitest: unit + API integration (uses TEST_DATABASE_URL)
-npm run build && npm run test:e2e   # Playwright against `next start` (uses E2E_DATABASE_URL)
+npm test               # Vitest: unit + API integration (own throwaway SQLite file)
+npm run build && npm run test:e2e   # Playwright against `next start` (own throwaway SQLite file)
 ```
 
 - **Unit** (`tests/unit`): matching algorithm, validation schemas, RBAC & resource permissions,
   state machine, gamification, moderation, classifier, upload validation, tokens, redirects, rate limiter.
-- **API integration** (`tests/api`): call the real Route Handlers against PostgreSQL — registration,
+- **API integration** (`tests/api`): call the real Route Handlers against a real SQLite database — registration,
   login/logout, CSRF rejection, suspended users, the full request lifecycle (matching, concurrent accept
   race, chat privacy, state-machine order, confirmation, reputation, achievements, reviews, live stats),
   withdrawal, authorization (admin APIs, role restrictions, ownership, private data, drafts), moderation
@@ -209,15 +203,9 @@ npm run build && npm run test:e2e   # Playwright against `next start` (uses E2E_
   matching, volunteer accept/start/complete, requester confirm + achievement + review, impact &
   achievements pages, admin access control, 404, and a mobile (Pixel 7) horizontal-overflow sweep.
 
-CI: `.github/workflows/ci.yml` runs lint, typecheck, Vitest, the production build and Playwright
-against a PostgreSQL service container.
+CI: `.github/workflows/ci.yml` runs lint, typecheck, Vitest, the production build and Playwright.
 
-Test databases are separate (`qollab_test`, `qollab_e2e`); helpers refuse to clear any database whose
-URL does not contain `test`/`e2e`. Create them once:
-
-```bash
-createdb qollab_test && createdb qollab_e2e
-```
+Tests create their own databases (`.tmp/test.db`, `.tmp/e2e.db`); the app database is never touched.
 
 Playwright needs a Chromium build (`npx playwright install chromium`, or set `CHROMIUM_PATH`).
 
@@ -238,30 +226,27 @@ npm run build          # prisma generate + next build
 npm start              # production server
 ```
 
-### Vercel + PostgreSQL (recommended)
+### Vercel
 
-1. Create a PostgreSQL database — **Supabase**, **Neon** or **Vercel Postgres**. For Supabase use the
-   *pooled* connection string (port 6543, `?pgbouncer=true`) as `DATABASE_URL` and the *direct* one
-   (port 5432) as `DIRECT_URL`.
-2. Import the repository in Vercel. Set the environment variables from `.env.example`
-   (at least `DATABASE_URL`, `DIRECT_URL`, `SESSION_SECRET`, `APP_URL`).
-3. Vercel automatically runs the `vercel-build` script (`prisma generate && prisma migrate deploy && next build`),
-   so migrations are applied on every deploy. For a demo instance load data once from your machine:
-   `DATABASE_URL=… DIRECT_URL=… npm run db:seed` (this wipes that database first).
-   Set `APP_URL` for the build as well — with an `https://` URL the build enables HSTS and
-   `upgrade-insecure-requests` in the security headers.
-4. **Uploads on Vercel:** the filesystem is read-only, so set `STORAGE_DRIVER=supabase`,
-   `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY` (server-side secret, *not* the publishable/anon key)
-   and create a private bucket named as `SUPABASE_STORAGE_BUCKET`. Files are always served through
-   `/api/files/…`, so private chat attachments stay access-controlled.
-5. Recommended: `UPSTASH_REDIS_REST_URL/TOKEN` for rate limiting across serverless instances,
-   `RESEND_API_KEY` for emails, and `DEMO_MODE=false` for a real launch.
-6. Google sign-in: add `${APP_URL}/api/auth/google/callback` as an authorized redirect URI.
+1. Import the repository in Vercel (no database or storage integrations needed).
+2. Set `SESSION_SECRET` (32+ random characters), `APP_URL` (your `https://…` address) and `DEMO_MODE=true`
+   for the demo. Optional: `GEMINI_API_KEY`, `GOOGLE_CLIENT_ID/SECRET`, `RESEND_API_KEY`.
+3. Deploy. `npm run build` creates the SQLite database with demo data and ships it with the app.
 
-### Any Node host / Docker
+**Important limitation:** Vercel's filesystem is read-only and serverless instances are short-lived.
+The database is copied to `/tmp` on each cold start, so changes made on the live site (new users,
+requests, messages, uploads) are **temporary**: they disappear when Vercel recycles the instance
+(usually after some idle minutes) and are not shared between parallel instances. Every redeploy starts
+again from fresh demo data. This is fine for a hackathon demo; for permanent data use a host with a
+persistent disk (below).
 
-Run `npm ci && npm run build && npm run db:deploy && npm start` with the same environment
-variables. With `STORAGE_DRIVER=local` mount `UPLOAD_DIR` on a persistent volume.
+### Any Node host / VPS / Docker (data persists)
+
+```bash
+npm ci && npm run build && npm start
+```
+
+Keep `prisma/qollab.db` and `storage/uploads/` on a persistent disk (e.g. a Render/Railway volume or a VPS).
 Health check: `GET /api/health`.
 
 ## API reference
@@ -315,12 +300,11 @@ All endpoints return `{ data }` or `{ error: { code, fieldErrors? } }`.
 
 | Problem | Fix |
 |---|---|
-| `P1001: Can't reach database server` | Check `DATABASE_URL`, that PostgreSQL is running and accepts connections |
+| Empty site / missing demo data | Run `npm run db:setup` (or `npm run db:seed` to reset the demo data) |
 | `SESSION_SECRET must be set…` in production | Set a 32+ character `SESSION_SECRET` |
 | Grey map without tiles | The tile server is unreachable (offline / firewall) or `NEXT_PUBLIC_MAP_TILE_URL` is wrong; markers and filters still work |
-| Uploads fail on Vercel | Configure the Supabase storage driver (the Vercel filesystem is read-only) |
+| Data disappears on Vercel | Expected: the Vercel filesystem is temporary — use a host with a persistent disk for permanent data |
 | "Google sign-in is not configured" | Set `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` and the redirect URI |
 | Demo buttons missing / `demoDisabled` | Set `DEMO_MODE=true` and run `npm run db:seed` |
 | "Too many attempts" while testing | Rate limits are per IP; wait a minute or set `DISABLE_RATE_LIMIT=true` locally |
 | E2E: browser not found | `npx playwright install chromium` or set `CHROMIUM_PATH` |
-| Seed or tests complain about the database URL | Tests only run against URLs containing `test`/`e2e`; create `qollab_test` and `qollab_e2e` |

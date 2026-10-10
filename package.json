@@ -2,11 +2,10 @@
   "name": "qollab",
   "version": "1.0.0",
   "private": true,
-  "description": "QO'LLAB \u2014 Yaxshilikni birlashtiramiz. Social help platform connecting people in need, volunteers and organizations.",
+  "description": "QO'LLAB — Yaxshilikni birlashtiramiz. Social help platform connecting people in need, volunteers and organizations. Uses an embedded SQLite database — no external services required.",
   "scripts": {
-    "dev": "next dev",
-    "build": "prisma generate && next build",
-    "vercel-build": "prisma generate && prisma migrate deploy && next build",
+    "dev": "npm run db:setup && next dev",
+    "build": "prisma generate && npm run db:setup && next build",
     "start": "next start",
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
@@ -15,10 +14,10 @@
     "test:api": "vitest run tests/api",
     "test:e2e": "playwright test",
     "db:migrate": "prisma migrate dev",
-    "db:deploy": "prisma migrate deploy",
-    "db:seed": "prisma db seed",
-    "db:reset": "prisma migrate reset --force",
-    "postinstall": "prisma generate"
+    "db:seed": "tsx prisma/seed.ts",
+    "db:reset": "tsx prisma/seed.ts",
+    "postinstall": "prisma generate",
+    "db:setup": "prisma migrate deploy && tsx scripts/ensure-db.ts"
   },
   "prisma": {
     "seed": "tsx prisma/seed.ts"

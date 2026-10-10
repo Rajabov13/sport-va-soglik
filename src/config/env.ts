@@ -20,12 +20,8 @@ export const env = {
     clientSecret: process.env.GOOGLE_CLIENT_SECRET ?? "",
   },
   storage: {
-    driver: (process.env.STORAGE_DRIVER ?? "local") as "local" | "supabase",
     localDir: process.env.UPLOAD_DIR ?? "./storage/uploads",
     maxFileBytes: Number(process.env.UPLOAD_MAX_BYTES ?? 5 * 1024 * 1024),
-    supabaseUrl: process.env.SUPABASE_URL ?? "",
-    supabaseServiceKey: process.env.SUPABASE_SERVICE_ROLE_KEY ?? "",
-    supabaseBucket: process.env.SUPABASE_STORAGE_BUCKET ?? "qollab-uploads",
   },
   email: {
     provider: (process.env.EMAIL_PROVIDER ?? "console") as "console" | "resend",

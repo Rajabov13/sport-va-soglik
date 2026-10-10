@@ -9,9 +9,12 @@ export interface StorageDriver {
   delete(key: string): Promise<void>;
 }
 
-/** Local filesystem driver (development / single server). Files are served by /api/files/[...key]. */
+/**
+ * Local filesystem driver. Files are served (with access control) by /api/files/[...key].
+ * On read-only serverless hosts (Vercel) files go to /tmp.
+ */
 class LocalDriver implements StorageDriver {
-  private root = path.resolve(env.storage.localDir);
+  private root = path.resolve(process.env.VERCEL && !process.env.UPLOAD_DIR ? "/tmp/qollab-uploads" : env.storage.localDir);
 
   private resolve(key: string) {
     if (!isSafeKey(key)) throw new Error("Unsafe storage key");
@@ -40,54 +43,10 @@ class LocalDriver implements StorageDriver {
   }
 }
 
-/** Supabase Storage driver (production / serverless). Uses the service-role key server-side only. */
-class SupabaseDriver implements StorageDriver {
-  constructor(
-    private baseUrl: string,
-    private key: string,
-    private bucket: string,
-  ) {}
-
-  private objectUrl(key: string) {
-    return `${this.baseUrl}/storage/v1/object/${this.bucket}/${key}`;
-  }
-
-  async put(key: string, data: Uint8Array, contentType: string) {
-    if (!isSafeKey(key)) throw new Error("Unsafe storage key");
-    const res = await fetch(this.objectUrl(key), {
-      method: "POST",
-      headers: { Authorization: `Bearer ${this.key}`, "Content-Type": contentType, "x-upsert": "false" },
-      body: Buffer.from(data),
-    });
-    if (!res.ok) throw new Error(`Supabase upload failed: ${res.status}`);
-    // Files are proxied through /api/files so private attachments stay access-controlled.
-    return { url: `/api/files/${key}` };
-  }
-
-  async get(key: string) {
-    if (!isSafeKey(key)) return null;
-    const res = await fetch(this.objectUrl(key), { headers: { Authorization: `Bearer ${this.key}` } });
-    if (!res.ok) return null;
-    return new Uint8Array(await res.arrayBuffer());
-  }
-
-  async delete(key: string) {
-    await fetch(`${this.baseUrl}/storage/v1/object/${this.bucket}`, {
-      method: "DELETE",
-      headers: { Authorization: `Bearer ${this.key}`, "Content-Type": "application/json" },
-      body: JSON.stringify({ prefixes: [key] }),
-    });
-  }
-}
-
 let driver: StorageDriver | null = null;
 
+/** Uploads are stored on the server's disk (no external storage service). */
 export function storage(): StorageDriver {
-  if (driver) return driver;
-  const s = env.storage;
-  driver =
-    s.driver === "supabase" && s.supabaseUrl && s.supabaseServiceKey
-      ? new SupabaseDriver(s.supabaseUrl.replace(/\/$/, ""), s.supabaseServiceKey, s.supabaseBucket)
-      : new LocalDriver();
+  driver ??= new LocalDriver();
   return driver;
 }

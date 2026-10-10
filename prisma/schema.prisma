@@ -1,14 +1,14 @@
 // QO'LLAB — relational data model
-// PostgreSQL + Prisma ORM
+// Embedded SQLite (file database, no external service) + Prisma ORM
 
 generator client {
   provider = "prisma-client-js"
 }
 
 datasource db {
-  provider  = "postgresql"
-  url       = env("DATABASE_URL")
-  directUrl = env("DIRECT_URL")
+  provider = "sqlite"
+  // Overridden at runtime by src/server/db.ts (see resolveDatabaseUrl); this default is used by the Prisma CLI.
+  url      = "file:./qollab.db"
 }
 
 // ───────────────────────────── Enums ─────────────────────────────
@@ -49,12 +49,6 @@ enum AssignmentStatus {
   COMPLETION_REQUESTED
   COMPLETED
   CANCELLED
-}
-
-enum ContactMethod {
-  CHAT
-  PHONE
-  EMAIL
 }
 
 enum NotificationType {
@@ -214,7 +208,7 @@ model Profile {
 model VolunteerProfile {
   id                 String   @id @default(cuid())
   userId             String   @unique
-  skills             String[]
+  skills             Json     @default("[]")
   radiusKm           Int      @default(10)
   latitude           Float?
   longitude          Float?
@@ -288,7 +282,7 @@ model Category {
   nameUz        String
   nameRu        String
   nameEn        String
-  relatedSkills String[]
+  relatedSkills Json      @default("[]")
   sortOrder     Int       @default(0)
   isActive      Boolean   @default(true)
   createdAt     DateTime  @default(now())
@@ -423,7 +417,7 @@ model Request {
   latitude           Float
   longitude          Float
   preferredDate      DateTime?
-  contactPreferences ContactMethod[]
+  contactPreferences Json            @default("[]")
   contactPhone       String?
   additionalInfo     String?
   peopleCount        Int             @default(1)
