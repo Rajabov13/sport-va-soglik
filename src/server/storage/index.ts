@@ -56,7 +56,7 @@ class SupabaseDriver implements StorageDriver {
     if (!isSafeKey(key)) throw new Error("Unsafe storage key");
     const res = await fetch(this.objectUrl(key), {
       method: "POST",
-      headers: { Authorization: `Bearer ${this.key}`, "Content-Type": contentType, "x-upsert": "false" },
+      headers: { apikey: this.key, Authorization: `Bearer ${this.key}`, "Content-Type": contentType, "x-upsert": "false" },
       body: Buffer.from(data),
     });
     if (!res.ok) throw new Error(`Supabase upload failed: ${res.status}`);
@@ -66,7 +66,7 @@ class SupabaseDriver implements StorageDriver {
 
   async get(key: string) {
     if (!isSafeKey(key)) return null;
-    const res = await fetch(this.objectUrl(key), { headers: { Authorization: `Bearer ${this.key}` } });
+    const res = await fetch(this.objectUrl(key), { headers: { apikey: this.key, Authorization: `Bearer ${this.key}` } });
     if (!res.ok) return null;
     return new Uint8Array(await res.arrayBuffer());
   }
@@ -74,7 +74,7 @@ class SupabaseDriver implements StorageDriver {
   async delete(key: string) {
     await fetch(`${this.baseUrl}/storage/v1/object/${this.bucket}`, {
       method: "DELETE",
-      headers: { Authorization: `Bearer ${this.key}`, "Content-Type": "application/json" },
+      headers: { apikey: this.key, Authorization: `Bearer ${this.key}`, "Content-Type": "application/json" },
       body: JSON.stringify({ prefixes: [key] }),
     });
   }
