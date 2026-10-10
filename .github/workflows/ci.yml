@@ -8,7 +8,21 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: qollab
+          POSTGRES_PASSWORD: qollab
+          POSTGRES_DB: qollab
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U qollab" --health-interval 5s --health-timeout 5s --health-retries 10
     env:
+      DATABASE_URL: postgresql://qollab:qollab@localhost:5432/qollab?schema=public
+      DIRECT_URL: postgresql://qollab:qollab@localhost:5432/qollab?schema=public
+      TEST_DATABASE_URL: postgresql://qollab:qollab@localhost:5432/qollab_test?schema=public
+      E2E_DATABASE_URL: postgresql://qollab:qollab@localhost:5432/qollab_e2e?schema=public
       SESSION_SECRET: ci-secret-0123456789-0123456789-abcdef
       APP_URL: http://localhost:3100
       DEMO_MODE: "true"
@@ -19,6 +33,10 @@ jobs:
         with:
           node-version: 22
           cache: npm
+      - name: Create test databases
+        run: |
+          PGPASSWORD=qollab psql -h localhost -U qollab -c "CREATE DATABASE qollab_test;"
+          PGPASSWORD=qollab psql -h localhost -U qollab -c "CREATE DATABASE qollab_e2e;"
       - run: npm ci
       - run: npm run lint
       - run: npm run typecheck

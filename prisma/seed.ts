@@ -1,13 +1,12 @@
-import type { Prisma, Urgency, RequestStatus } from "@prisma/client";
+import { PrismaClient, type Prisma, type Urgency, type RequestStatus } from "@prisma/client";
 import bcrypt from "bcryptjs";
 import { CAMPAIGNS, CATEGORIES, CHAT_LINES, FEMALE_FIRST, LAST, LOCATIONS, MALE_FIRST, ORGANIZATIONS, REQUEST_TEMPLATES, REVIEW_COMMENTS, SKILL_POOL } from "./seed-data";
 import { ACHIEVEMENTS, completionXp, impactPoints, qualifiedAchievements } from "../src/server/domain/gamification";
 import { computeMatches } from "../src/server/services/matching";
 import { DEMO_ACCOUNTS } from "../src/config/demo";
 import { startOfToday } from "../src/lib/format";
-import { db } from "../src/server/db";
 
-
+const db = new PrismaClient();
 
 // Deterministic PRNG so the demo dataset is reproducible.
 let seed = 20261010;
@@ -38,12 +37,10 @@ function person(female: boolean) {
 }
 
 async function wipe() {
-  const tables = await db.$queryRawUnsafe<{ name: string }[]>(
-    "SELECT name FROM sqlite_master WHERE type = 'table' AND name NOT LIKE 'sqlite_%' AND name <> '_prisma_migrations'",
-  );
-  await db.$executeRawUnsafe("PRAGMA foreign_keys = OFF");
-  for (const t of tables) await db.$executeRawUnsafe(`DELETE FROM "${t.name}"`);
-  await db.$executeRawUnsafe("PRAGMA foreign_keys = ON");
+  const tables = await db.$queryRaw<{ tablename: string }[]>`SELECT tablename FROM pg_tables WHERE schemaname = 'public' AND tablename <> '_prisma_migrations'`;
+  if (tables.length) {
+    await db.$executeRawUnsafe(`TRUNCATE ${tables.map((t) => `"public"."${t.tablename}"`).join(", ")} CASCADE`);
+  }
 }
 
 async function main() {

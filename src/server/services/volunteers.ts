@@ -1,5 +1,4 @@
 import { db } from "@/server/db";
-import { asStringArray } from "@/lib/utils";
 import { Errors } from "@/server/http/errors";
 import type { VolunteerProfileInput } from "@/schemas/volunteer";
 import { achievementProgress, ACHIEVEMENTS, levelProgress } from "@/server/domain/gamification";
@@ -30,7 +29,7 @@ export async function getVolunteerProfile(userId: string) {
     bio: user.profile?.bio ?? null,
     city: user.profile?.location?.city ?? vp.preferredLocations[0]?.location.city ?? null,
     memberSince: user.createdAt,
-    skills: asStringArray(vp.skills),
+    skills: vp.skills,
     categories: vp.categories.map((c) => c.category),
     availability: vp.availability.map((a) => ({ dayOfWeek: a.dayOfWeek, startMinute: a.startMinute, endMinute: a.endMinute })),
     preferredLocations: vp.preferredLocations.map((p) => p.location),

@@ -1,9 +1,7 @@
 import { defineConfig } from "vitest/config";
-import path from "node:path";
 import tsconfigPaths from "vite-tsconfig-paths";
 
-// Tests run against their own throwaway SQLite file.
-const TEST_DATABASE_URL = `file:${path.resolve(".tmp/test.db")}`;
+const TEST_DATABASE_URL = process.env.TEST_DATABASE_URL ?? "postgresql://qollab:qollab@localhost:5432/qollab_test?schema=public";
 
 export default defineConfig({
   plugins: [tsconfigPaths()],
@@ -17,6 +15,7 @@ export default defineConfig({
     hookTimeout: 60_000,
     env: {
       DATABASE_URL: TEST_DATABASE_URL,
+      DIRECT_URL: TEST_DATABASE_URL,
       SESSION_SECRET: "test-secret-0123456789-0123456789-abcdef",
       DISABLE_RATE_LIMIT: "true",
       DEMO_MODE: "true",

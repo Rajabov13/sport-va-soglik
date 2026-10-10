@@ -11,7 +11,7 @@ export async function listOrganizations(opts: { q?: string; page: number; pageSi
   const where: Prisma.OrganizationWhereInput = {
     deletedAt: null,
     status: "VERIFIED",
-    ...(opts.q ? { OR: [{ name: { contains: opts.q } }, { description: { contains: opts.q } }] } : {}),
+    ...(opts.q ? { OR: [{ name: { contains: opts.q, mode: "insensitive" } }, { description: { contains: opts.q, mode: "insensitive" } }] } : {}),
   };
   const [items, total] = await Promise.all([
     db.organization.findMany({
@@ -145,7 +145,7 @@ export async function listCampaigns(opts: { q?: string; status?: "ACTIVE" | "COM
     status: opts.status ?? { in: ["ACTIVE", "COMPLETED"] },
     organization: { status: "VERIFIED", deletedAt: null },
     ...(opts.organizationId ? { organizationId: opts.organizationId } : {}),
-    ...(opts.q ? { OR: [{ title: { contains: opts.q } }, { description: { contains: opts.q } }] } : {}),
+    ...(opts.q ? { OR: [{ title: { contains: opts.q, mode: "insensitive" } }, { description: { contains: opts.q, mode: "insensitive" } }] } : {}),
   };
   const [items, total] = await Promise.all([
     db.campaign.findMany({

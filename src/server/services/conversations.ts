@@ -34,7 +34,7 @@ export async function listConversations(userId: string) {
         },
       },
     },
-    orderBy: { conversation: { lastMessageAt: "desc" } },
+    orderBy: { conversation: { lastMessageAt: { sort: "desc", nulls: "last" } } },
     take: 50,
   });
 

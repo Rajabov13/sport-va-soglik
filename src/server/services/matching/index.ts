@@ -1,5 +1,4 @@
 import { db } from "@/server/db";
-import { asStringArray } from "@/lib/utils";
 import { notify } from "@/server/services/notifications";
 import { rankVolunteers, ruleBasedStrategy } from "./rule-based";
 import type { MatchingStrategy, MatchVolunteerInput } from "./types";
@@ -31,7 +30,7 @@ async function loadCandidates(excludeUserIds: string[]): Promise<MatchVolunteerI
     latitude: p.latitude!,
     longitude: p.longitude!,
     radiusKm: p.radiusKm,
-    skills: asStringArray(p.skills),
+    skills: p.skills,
     categoryIds: p.categories.map((c) => c.categoryId),
     isAvailableNow: p.isAvailableNow,
     availability: p.availability.map((a) => ({ dayOfWeek: a.dayOfWeek, startMinute: a.startMinute, endMinute: a.endMinute })),
@@ -60,7 +59,7 @@ export async function computeMatches(requestId: string, opts: { notify?: boolean
     {
       id: request.id,
       categoryId: request.categoryId,
-      relatedSkills: asStringArray(request.category.relatedSkills),
+      relatedSkills: request.category.relatedSkills,
       urgency: request.urgency,
       latitude: request.latitude,
       longitude: request.longitude,

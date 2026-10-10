@@ -28,8 +28,3 @@ export function slugify(input: string) {
 export function clamp(n: number, min: number, max: number) {
   return Math.min(max, Math.max(min, n));
 }
-
-/** Normalise a JSON column that stores a list of strings (SQLite has no native array type). */
-export function asStringArray(value: unknown): string[] {
-  return Array.isArray(value) ? value.filter((v): v is string => typeof v === "string") : [];
-}

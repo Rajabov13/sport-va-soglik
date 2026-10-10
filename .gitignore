@@ -15,6 +15,3 @@ next-env.d.ts
 .DS_Store
 /storage/uploads/*/
 .tmp
-
-prisma/*.db
-prisma/*.db-journal
