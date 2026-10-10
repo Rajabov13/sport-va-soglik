@@ -142,7 +142,7 @@ All variables are documented in [`.env.example`](.env.example). The essentials:
 | `STORAGE_DRIVER`, `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, `SUPABASE_STORAGE_BUCKET` | – | Uploads in Supabase Storage (needed on Vercel) |
 | `EMAIL_PROVIDER`, `RESEND_API_KEY`, `EMAIL_FROM` | – | Email notifications |
 | `UPSTASH_REDIS_REST_URL` / `UPSTASH_REDIS_REST_TOKEN` | – | Distributed rate limiting |
-| `GEMINI_API_KEY` | – | AI-assisted category/urgency suggestion (keyword fallback otherwise) |
+| `GEMINI_API_KEY`, `GEMINI_MODEL`, `GEMINI_FALLBACK_MODEL` | – | AI-assisted category/urgency suggestion — primary model, then a lighter fallback model on overload, then the keyword classifier |
 | `NEXT_PUBLIC_MAP_TILE_URL` | – | Custom map tiles (e.g. MapTiler with key) |
 
 Integrations without keys degrade gracefully: no Google button errors (a friendly message is shown),
@@ -209,6 +209,9 @@ npm run build && npm run test:e2e   # Playwright against `next start` (uses E2E_
   matching, volunteer accept/start/complete, requester confirm + achievement + review, impact &
   achievements pages, admin access control, 404, and a mobile (Pixel 7) horizontal-overflow sweep.
 
+CI: `.github/workflows/ci.yml` runs lint, typecheck, Vitest, the production build and Playwright
+against a PostgreSQL service container.
+
 Test databases are separate (`qollab_test`, `qollab_e2e`); helpers refuse to clear any database whose
 URL does not contain `test`/`e2e`. Create them once:
 
@@ -217,6 +220,16 @@ createdb qollab_test && createdb qollab_e2e
 ```
 
 Playwright needs a Chromium build (`npx playwright install chromium`, or set `CHROMIUM_PATH`).
+
+### QA scripts
+
+With the app running (`npm run dev` or `npm start`) and seeded:
+
+```bash
+bash scripts/flow-check.sh            # API smoke test of the whole demo flow
+node scripts/page-sweep.mjs '<ids-json>'  # visits every page per role: HTTP status, JS errors, horizontal overflow
+GEMINI_API_KEY=… npx tsx scripts/ai-check.ts  # live check of the optional Gemini classifier
+```
 
 ## Build & deploy
 
@@ -232,8 +245,11 @@ npm start              # production server
    (port 5432) as `DIRECT_URL`.
 2. Import the repository in Vercel. Set the environment variables from `.env.example`
    (at least `DATABASE_URL`, `DIRECT_URL`, `SESSION_SECRET`, `APP_URL`).
-3. Build command: `npm run build` (default). Apply migrations once — locally or in CI:
-   `DATABASE_URL=… DIRECT_URL=… npm run db:deploy`, then optionally `npm run db:seed` for a demo instance.
+3. Vercel automatically runs the `vercel-build` script (`prisma generate && prisma migrate deploy && next build`),
+   so migrations are applied on every deploy. For a demo instance load data once from your machine:
+   `DATABASE_URL=… DIRECT_URL=… npm run db:seed` (this wipes that database first).
+   Set `APP_URL` for the build as well — with an `https://` URL the build enables HSTS and
+   `upgrade-insecure-requests` in the security headers.
 4. **Uploads on Vercel:** the filesystem is read-only, so set `STORAGE_DRIVER=supabase`,
    `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY` (server-side secret, *not* the publishable/anon key)
    and create a private bucket named as `SUPABASE_STORAGE_BUCKET`. Files are always served through

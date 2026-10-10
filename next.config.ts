@@ -1,6 +1,8 @@
 import type { NextConfig } from "next";
 
 const isProd = process.env.NODE_ENV === "production";
+// Only force HTTPS upgrades/HSTS when the app is actually served over HTTPS (keeps `next start` on localhost working).
+const isHttps = (process.env.APP_URL ?? "").startsWith("https://");
 
 const csp = [
   "default-src 'self'",
@@ -13,7 +15,7 @@ const csp = [
   "base-uri 'self'",
   "form-action 'self' https://accounts.google.com",
   "object-src 'none'",
-  ...(isProd ? ["upgrade-insecure-requests"] : []),
+  ...(isProd && isHttps ? ["upgrade-insecure-requests"] : []),
 ].join("; ");
 
 const securityHeaders = [
@@ -23,7 +25,7 @@ const securityHeaders = [
   { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
   { key: "Permissions-Policy", value: "camera=(), microphone=(), geolocation=(self)" },
   { key: "Cross-Origin-Opener-Policy", value: "same-origin" },
-  ...(isProd ? [{ key: "Strict-Transport-Security", value: "max-age=63072000; includeSubDomains; preload" }] : []),
+  ...(isProd && isHttps ? [{ key: "Strict-Transport-Security", value: "max-age=63072000; includeSubDomains; preload" }] : []),
 ];
 
 const nextConfig: NextConfig = {

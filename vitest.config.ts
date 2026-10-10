@@ -21,6 +21,7 @@ export default defineConfig({
       DEMO_MODE: "true",
       APP_URL: "http://localhost:3000",
       NODE_ENV: "test",
+      UPLOAD_DIR: ".tmp/test-uploads",
     },
   },
 });

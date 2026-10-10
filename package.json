@@ -2,10 +2,11 @@
   "name": "qollab",
   "version": "1.0.0",
   "private": true,
-  "description": "QO'LLAB — Yaxshilikni birlashtiramiz. Social help platform connecting people in need, volunteers and organizations.",
+  "description": "QO'LLAB \u2014 Yaxshilikni birlashtiramiz. Social help platform connecting people in need, volunteers and organizations.",
   "scripts": {
     "dev": "next dev",
     "build": "prisma generate && next build",
+    "vercel-build": "prisma generate && prisma migrate deploy && next build",
     "start": "next start",
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",

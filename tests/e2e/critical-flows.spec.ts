@@ -1,13 +1,13 @@
 import { expect, test, type Page } from "@playwright/test";
 
 /** Run the UI in English for readable assertions (Uzbek is the product default). */
-async function useEnglish(page: Page) {
+async function setEnglish(page: Page) {
   await page.context().addCookies([{ name: "qollab_locale", value: "en", domain: "localhost", path: "/" }]);
 }
 
 async function demoLogin(page: Page, persona: "user" | "volunteer" | "admin") {
   await page.context().clearCookies();
-  await useEnglish(page);
+  await setEnglish(page);
   await page.goto("/auth/login");
   await page.getByTestId(`demo-${persona}`).click();
   await page.waitForURL(persona === "admin" ? "**/admin" : persona === "volunteer" ? "**/dashboard/volunteer" : "**/dashboard");
@@ -16,7 +16,7 @@ async function demoLogin(page: Page, persona: "user" | "volunteer" | "admin") {
 test.describe.configure({ mode: "serial" });
 
 test("register, logout and log back in", async ({ page }) => {
-  await useEnglish(page);
+  await setEnglish(page);
   const email = `e2e.${Date.now()}@example.com`;
   await page.goto("/auth/register");
   await page.getByTestId("role-USER").click();
@@ -41,7 +41,7 @@ test("register, logout and log back in", async ({ page }) => {
 });
 
 test("shows field errors for invalid login", async ({ page }) => {
-  await useEnglish(page);
+  await setEnglish(page);
   await page.goto("/auth/login");
   await page.getByLabel("Email").fill("not-an-email");
   await page.getByRole("button", { name: "Log in", exact: true }).click();
@@ -108,7 +108,7 @@ test("requester confirms, the volunteer earns an achievement, and a review is le
 });
 
 test("impact statistics and achievements reflect the completed help", async ({ page }) => {
-  await useEnglish(page);
+  await setEnglish(page);
   await page.goto("/impact");
   await expect(page.getByRole("heading", { name: "Impact dashboard" })).toBeVisible();
   await demoLogin(page, "volunteer");
@@ -124,14 +124,14 @@ test("non-admins are blocked from the admin panel", async ({ page }) => {
 });
 
 test("unknown pages show the 404 page", async ({ page }) => {
-  await useEnglish(page);
+  await setEnglish(page);
   const res = await page.goto("/this-page-does-not-exist");
   expect(res?.status()).toBe(404);
   await expect(page.getByText("Page not found")).toBeVisible();
 });
 
 test("@mobile landing and dashboard have no horizontal overflow", async ({ page }) => {
-  await useEnglish(page);
+  await setEnglish(page);
   for (const path of ["/", "/map", "/impact", "/campaigns", "/organizations"]) {
     await page.goto(path);
     const overflow = await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);

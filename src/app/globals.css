@@ -49,6 +49,11 @@
     @apply outline-none ring-2 ring-ring ring-offset-2 ring-offset-background;
   }
 
+  /* Grid tracks never grow past their container because of long, non-wrapping content. */
+  :where(.grid) > * {
+    min-width: 0;
+  }
+
   h1, h2, h3 {
     @apply tracking-tight;
     text-wrap: balance;

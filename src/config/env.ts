@@ -39,6 +39,7 @@ export const env = {
   ai: {
     geminiApiKey: process.env.GEMINI_API_KEY ?? "",
     geminiModel: process.env.GEMINI_MODEL ?? "gemini-flash-latest",
+    geminiFallbackModel: process.env.GEMINI_FALLBACK_MODEL ?? "gemini-flash-lite-latest",
   },
 };
 
