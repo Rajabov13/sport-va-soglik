@@ -1,0 +1,496 @@
+<!doctype html><html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"></head><body>
+<title>QO‘LLAB — питч</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Unbounded:wght@500;700;800&family=Manrope:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&display=swap">
+<style>
+/* Layout: fixed 16:9 stage scaled to the window, presenter bar with timer below it.
+   Single deliberate look in QO'LLAB brand colours (indigo + green), so no dark-mode blocks. */
+:root{
+  --ink:#141733;        /* text, dark slides */
+  --indigo:#252a9c;     /* brand primary */
+  --indigo-deep:#181c6b;
+  --green:#23935f;      /* brand accent */
+  --green-bright:#4fd18f;
+  --paper:#f8f7f3;      /* light slide ground */
+  --paper-2:#eceef8;    /* second light tone */
+  --muted:#5b5f78;
+  --line:#d9dbea;
+  --warn:#d98a0b;
+  --over:#d23b3b;
+  --chrome:#0e1030;     /* presenter bar + backdrop */
+  --chrome-2:#1b1e45;
+  --chrome-fg:#e8e9f6;
+  --chrome-dim:#9a9dc0;
+  --f-display:"Unbounded","Arial Black",system-ui,sans-serif;
+  --f-body:"Manrope","Segoe UI",system-ui,sans-serif;
+  --f-mono:"JetBrains Mono",ui-monospace,Menlo,Consolas,monospace;
+  color-scheme:dark;
+}
+html,body{height:100%}
+body{background:var(--chrome);color:var(--chrome-fg);font-family:var(--f-body);display:flex;flex-direction:column;overflow:hidden}
+.viewport{flex:1;min-height:0;position:relative;display:flex;align-items:center;justify-content:center;padding-inline:16px;padding-block:12px}
+.stage{width:1600px;height:900px;position:absolute;left:50%;top:50%;transform-origin:center center;border-radius:14px;overflow:hidden;box-shadow:0 30px 80px -20px rgba(0,0,0,.6)}
+.slide{position:absolute;inset:0;padding:96px 112px 104px;display:flex;flex-direction:column;gap:40px;background:var(--paper);color:var(--ink);opacity:0;visibility:hidden;transition:opacity .45s ease,visibility 0s linear .45s}
+.slide.active{opacity:1;visibility:visible;transition:opacity .45s ease}
+.slide.alt{background:var(--paper-2)}
+.slide.dark{background:var(--indigo-deep);color:#f1f2ff}
+.slide.dark .eyebrow{color:var(--green-bright)}
+.slide.dark .lead{color:#c9cbf0}
+@media (prefers-reduced-motion:reduce){.slide,.slide.active{transition:none}}
+
+.eyebrow{font-family:var(--f-mono);font-size:20px;letter-spacing:.14em;text-transform:uppercase;color:var(--green);font-weight:700}
+h1,h2,h3{margin:0;font-family:var(--f-display);text-wrap:balance}
+h2{font-size:60px;line-height:1.08;font-weight:700;letter-spacing:-.01em;max-width:1300px}
+h3{font-size:28px;line-height:1.2;font-weight:700}
+p{margin:0}
+.lead{font-size:30px;line-height:1.45;color:var(--muted);max-width:1180px}
+.body{font-size:24px;line-height:1.5;color:var(--muted)}
+.slide.dark .body{color:#c9cbf0}
+.foot{position:absolute;left:112px;right:112px;bottom:40px;display:flex;justify-content:space-between;font-family:var(--f-mono);font-size:18px;color:var(--muted);opacity:.8}
+.slide.dark .foot{color:#a9acdc}
+.spacer{flex:1}
+
+/* cover */
+.cover{justify-content:center;gap:36px;background:radial-gradient(1200px 700px at 85% 110%,#2f8f66 0%,rgba(47,143,102,0) 60%),var(--indigo-deep);color:#fff}
+.brand{display:flex;align-items:center;gap:28px}
+.brand svg{width:120px;height:120px}
+.brand h1{font-size:132px;font-weight:800;letter-spacing:-.02em;line-height:1}
+.tagline{font-family:var(--f-display);font-size:44px;font-weight:500;color:var(--green-bright)}
+.cover .lead{color:#d4d6f5;font-size:32px}
+.motto{font-size:26px;color:#aeb1e0;font-style:italic}
+
+/* cards */
+.grid{display:grid;gap:24px}
+.g3{grid-template-columns:repeat(3,1fr)}
+.g2{grid-template-columns:repeat(2,1fr)}
+.g4{grid-template-columns:repeat(4,1fr)}
+.card{background:#fff;border:1px solid var(--line);border-radius:18px;padding:32px;display:flex;flex-direction:column;gap:14px;min-width:0}
+.slide.dark .card{background:rgba(255,255,255,.06);border-color:rgba(255,255,255,.14)}
+.tag{font-family:var(--f-mono);font-size:18px;font-weight:700;color:var(--indigo);letter-spacing:.06em}
+.slide.dark .tag{color:var(--green-bright)}
+
+/* flow */
+.flow{display:flex;flex-wrap:wrap;gap:14px 10px;align-items:center}
+.step{font-family:var(--f-mono);font-size:22px;font-weight:700;padding:14px 20px;border-radius:12px;background:#fff;border:1.5px solid var(--line);color:var(--ink)}
+.step.key{background:var(--indigo);border-color:var(--indigo);color:#fff}
+.step.done{background:var(--green);border-color:var(--green);color:#fff}
+.arrow{font-size:26px;color:var(--muted)}
+
+/* score bars */
+.score{display:flex;flex-direction:column;gap:18px;max-width:1300px}
+.srow{display:grid;grid-template-columns:300px 1fr 90px;align-items:center;gap:24px;font-size:26px}
+.srow b{font-weight:700}
+.track{height:30px;background:#e2e4f2;border-radius:8px;overflow:hidden}
+.fill{height:100%;background:var(--indigo);border-radius:8px}
+.srow .pts{font-family:var(--f-mono);font-weight:700;text-align:right;color:var(--indigo)}
+
+/* big statement */
+.big{font-family:var(--f-display);font-size:96px;font-weight:800;line-height:1;color:var(--green-bright)}
+
+/* table */
+table{border-collapse:collapse;font-size:24px;width:100%}
+th,td{text-align:left;padding:14px 18px;border-bottom:1px solid var(--line);vertical-align:top}
+th{font-family:var(--f-mono);font-size:18px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+td:first-child{font-weight:700;white-space:nowrap}
+
+/* demo checklist */
+.demo{display:flex;flex-direction:column;gap:18px;counter-reset:d;font-size:27px;line-height:1.4}
+.demo li{list-style:none;display:grid;grid-template-columns:56px 1fr;gap:18px;align-items:baseline}
+.demo li::before{counter-increment:d;content:counter(d);font-family:var(--f-mono);font-weight:700;color:var(--green-bright);font-size:26px}
+.demo{padding:0;margin:0}
+
+/* ───── presenter bar ───── */
+.bar{flex:none;background:var(--chrome-2);border-top:1px solid rgba(255,255,255,.08);padding:10px 16px calc(10px + env(safe-area-inset-bottom,0px));display:flex;flex-wrap:wrap;align-items:center;gap:10px 16px}
+.bar.hidden-ui{display:none}
+.grp{display:flex;align-items:center;gap:8px}
+button,select{font:600 14px var(--f-body);color:var(--chrome-fg);background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.14);border-radius:9px;padding:8px 12px;cursor:pointer}
+button:hover,select:hover{background:rgba(255,255,255,.13)}
+button:focus-visible,select:focus-visible{outline:2px solid var(--green-bright);outline-offset:2px}
+button.primary{background:var(--green);border-color:var(--green);color:#fff;min-width:96px}
+button.primary.running{background:#3b3f7a;border-color:#3b3f7a}
+select option{color:#111;background:#fff}
+.count{font-family:var(--f-mono);font-size:14px;color:var(--chrome-dim);min-width:54px;text-align:center;font-variant-numeric:tabular-nums}
+.timeline{flex:1 1 260px;min-width:0;display:flex;flex-direction:column;gap:6px}
+.segs{position:relative;display:flex;gap:3px;height:14px}
+.seg{position:relative;height:100%;background:rgba(255,255,255,.1);border-radius:3px;overflow:hidden;cursor:pointer;border:0;padding:0;min-width:0}
+.seg>i{position:absolute;inset:0 auto 0 0;width:0;background:var(--green)}
+.seg.cur{outline:2px solid var(--chrome-fg);outline-offset:1px}
+.seg.late>i{background:var(--warn)}
+.needle{position:absolute;top:-4px;bottom:-4px;width:2px;background:#fff;border-radius:1px;left:0;pointer-events:none;box-shadow:0 0 0 1px rgba(0,0,0,.4)}
+.tl-meta{display:flex;justify-content:space-between;gap:12px;font-size:12.5px;color:var(--chrome-dim);font-variant-numeric:tabular-nums}
+.pace.behind{color:#ffb547}.pace.ahead{color:var(--green-bright)}
+.clock{font-family:var(--f-mono);font-weight:700;font-size:34px;line-height:1;font-variant-numeric:tabular-nums;letter-spacing:.02em;min-width:118px;text-align:right}
+.clock.warn{color:#ffb547}
+.clock.over{color:#ff6b6b;animation:blink 1s steps(2,start) infinite}
+@keyframes blink{to{opacity:.45}}
+@media (prefers-reduced-motion:reduce){.clock.over{animation:none}}
+.clock-wrap{display:flex;flex-direction:column;align-items:flex-end;gap:2px}
+.clock-wrap small{font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--chrome-dim)}
+.keys{font-size:12px;color:var(--chrome-dim)}
+.toast{position:absolute;top:24px;left:50%;transform:translateX(-50%);background:var(--over);color:#fff;font:700 18px var(--f-body);padding:10px 18px;border-radius:10px;box-shadow:0 10px 30px rgba(0,0,0,.4);z-index:5}
+.toast.warn{background:var(--warn)}
+@media (max-width:720px){.keys{display:none}.clock{font-size:26px;min-width:90px}}
+</style>
+
+<div class="viewport" id="viewport">
+  <div class="stage" id="stage">
+
+    <!-- 1 -->
+    <section class="slide cover active" data-time="15" data-title="Титул">
+      <div class="brand">
+        <svg viewBox="0 0 40 40" aria-hidden="true"><rect width="40" height="40" rx="12" fill="#252a9c"/><path d="M12 21.5c0-4.4 3.6-8 8-8s8 3.6 8 8" fill="none" stroke="#fff" stroke-width="3.2" stroke-linecap="round"/><path d="M14.5 25.5 20 30l5.5-4.5" fill="none" stroke="#4fd18f" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/><circle cx="20" cy="13.5" r="2.4" fill="#4fd18f"/></svg>
+        <h1>QO‘LLAB</h1>
+      </div>
+      <p class="tagline">Yaxshilikni birlashtiramiz.</p>
+      <p class="lead">Платформа социальной помощи для Узбекистана: соединяет людей, которым нужна помощь, волонтёров и социальные организации и превращает каждую просьбу в измеримый результат.</p>
+      <p class="motto">«Har bir yaxshilik oʻz manzilini topsin» — каждое доброе дело должно найти свой адрес.</p>
+    </section>
+
+    <!-- 2 -->
+    <section class="slide" data-time="30" data-title="Проблема">
+      <span class="eyebrow">Проблема</span>
+      <h2>Желающих помочь много, но помощь теряется по дороге</h2>
+      <div class="grid g3">
+        <div class="card"><span class="tag">НУЖДАЮЩИЙСЯ</span><h3>Не знает, к кому обратиться</h3><p class="body">Просьбы разбросаны по чатам и соцсетям, ответа можно не дождаться.</p></div>
+        <div class="card"><span class="tag">ВОЛОНТЁР</span><h3>Не видит, где он нужен рядом</h3><p class="body">Нет понятного способа найти задачу под свои навыки, район и свободное время.</p></div>
+        <div class="card"><span class="tag">ОРГАНИЗАЦИЯ</span><h3>Не может показать результат</h3><p class="body">Учёт в таблицах, доверие к просьбам не проверено, итог трудно измерить.</p></div>
+      </div>
+      <div class="foot"><span>QO‘LLAB</span><span>02</span></div>
+    </section>
+
+    <!-- 3 -->
+    <section class="slide dark" data-time="30" data-title="Решение">
+      <span class="eyebrow">Решение</span>
+      <h2>Одна платформа, где просьба проходит путь до выполненного дела</h2>
+      <div class="grid g4">
+        <div class="card"><h3>Проверка</h3><p class="body">Автоматическая премодерация отсекает спам, дубли и подозрительные просьбы.</p></div>
+        <div class="card"><h3>Умный подбор</h3><p class="body">Каждому волонтёру считается совпадение 0–100 с понятной разбивкой.</p></div>
+        <div class="card"><h3>Чат и статусы</h3><p class="body">Личный чат по заявке и прозрачная история каждого шага.</p></div>
+        <div class="card"><h3>Результат</h3><p class="body">Подтверждение, отзыв, репутация и живая статистика влияния.</p></div>
+      </div>
+      <div class="foot"><span>QO‘LLAB</span><span>03</span></div>
+    </section>
+
+    <!-- 4 -->
+    <section class="slide" data-time="35" data-title="Как работает">
+      <span class="eyebrow">Как это работает</span>
+      <h2>Жизненный цикл заявки — строгий и прозрачный</h2>
+      <div class="flow">
+        <span class="step">Просьба</span><span class="arrow">→</span>
+        <span class="step">Автопроверка</span><span class="arrow">→</span>
+        <span class="step key">VERIFIED</span><span class="arrow">→</span>
+        <span class="step key">Умный подбор</span><span class="arrow">→</span>
+        <span class="step">Волонтёр принял</span><span class="arrow">→</span>
+        <span class="step">Чат</span><span class="arrow">→</span>
+        <span class="step key">IN_PROGRESS</span><span class="arrow">→</span>
+        <span class="step">Волонтёр: «готово»</span><span class="arrow">→</span>
+        <span class="step">Заявитель подтверждает</span><span class="arrow">→</span>
+        <span class="step done">COMPLETED</span>
+      </div>
+      <div class="grid g3">
+        <div class="card"><h3>9 категорий, 4 уровня срочности</h3><p class="body">Метка на карте, город, дата, до 5 фото, удобный способ связи.</p></div>
+        <div class="card"><h3>Только один победитель</h3><p class="body">Принятие заявки — атомарная операция: двое волонтёров не возьмут одну задачу.</p></div>
+        <div class="card"><h3>История статусов</h3><p class="body">Каждый переход записан, отменённые и отклонённые тоже видны.</p></div>
+      </div>
+      <div class="foot"><span>QO‘LLAB</span><span>04</span></div>
+    </section>
+
+    <!-- 5 -->
+    <section class="slide alt" data-time="35" data-title="Умный подбор">
+      <span class="eyebrow">Умный подбор</span>
+      <h2>Совпадение 0–100, которое можно объяснить</h2>
+      <div class="score">
+        <div class="srow"><b>Расстояние</b><div class="track"><div class="fill" style="width:100%"></div></div><span class="pts">30</span></div>
+        <div class="srow"><b>Навыки</b><div class="track"><div class="fill" style="width:83.3%"></div></div><span class="pts">25</span></div>
+        <div class="srow"><b>Доступность</b><div class="track"><div class="fill" style="width:50%"></div></div><span class="pts">15</span></div>
+        <div class="srow"><b>Срочность</b><div class="track"><div class="fill" style="width:33.3%"></div></div><span class="pts">10</span></div>
+        <div class="srow"><b>Опыт</b><div class="track"><div class="fill" style="width:33.3%"></div></div><span class="pts">10</span></div>
+        <div class="srow"><b>Репутация</b><div class="track"><div class="fill" style="width:33.3%"></div></div><span class="pts">10</span></div>
+      </div>
+      <p class="body">При публикации считаются все активные волонтёры: топ-10 сохраняются с разбивкой, топ-5 сразу получают уведомление. Интерфейс <code>MatchingStrategy</code> готов к замене на ML-модель.</p>
+      <div class="foot"><span>QO‘LLAB</span><span>05</span></div>
+    </section>
+
+    <!-- 6 -->
+    <section class="slide" data-time="30" data-title="Для кого">
+      <span class="eyebrow">Для кого</span>
+      <h2>Четыре роли, у каждой свой кабинет</h2>
+      <table>
+        <tr><th>Роль</th><th>Что получает</th></tr>
+        <tr><td>Заявитель</td><td>Создание и отслеживание просьб, чат с волонтёром, подтверждение и отзыв</td></tr>
+        <tr><td>Волонтёр</td><td>Профиль навыков и радиуса, расписание, «доступен сейчас», подборка задач с % совпадения</td></tr>
+        <tr><td>Организация</td><td>Дашборд со статистикой, социальные кампании, управление командой волонтёров</td></tr>
+        <tr><td>Админ</td><td>Модерация пользователей, заявок, организаций и жалоб, аналитика, журнал аудита</td></tr>
+      </table>
+      <p class="body">Интерфейс на узбекском, русском и английском; PWA — ставится на телефон как приложение.</p>
+      <div class="foot"><span>QO‘LLAB</span><span>06</span></div>
+    </section>
+
+    <!-- 7 -->
+    <section class="slide alt" data-time="30" data-title="Доверие">
+      <span class="eyebrow">Доверие и безопасность</span>
+      <h2>Помощь работает, только когда людям безопасно</h2>
+      <div class="grid g2">
+        <div class="card"><h3>Приватность по умолчанию</h3><p class="body">Точный адрес и телефон видят только заявитель, назначенный волонтёр и админ. На карте координаты огрублены до ≈1 км.</p></div>
+        <div class="card"><h3>Права проверяются на сервере</h3><p class="body">RBAC для каждого маршрута и ресурса, защита от CSRF, лимиты запросов, bcrypt для паролей.</p></div>
+        <div class="card"><h3>Модерация</h3><p class="body">Автопроверка подозрительного текста, ссылок, флуда и дублей; жалобы на заявки, пользователей и сообщения.</p></div>
+        <div class="card"><h3>Безопасные загрузки</h3><p class="body">Тип файла по сигнатуре (JPEG/PNG/WebP), лимит 5 МБ, вложения чата приватны.</p></div>
+      </div>
+      <div class="foot"><span>QO‘LLAB</span><span>07</span></div>
+    </section>
+
+    <!-- 8 -->
+    <section class="slide dark" data-time="25" data-title="Результат">
+      <span class="eyebrow">Измеримый результат</span>
+      <h2>Каждое дело превращается в цифры и мотивацию</h2>
+      <div class="grid g2" style="align-items:start">
+        <div class="card"><span class="tag">ЖИВАЯ СТАТИСТИКА</span><p class="body">Заявки и выполненные дела, волонтёры, сколько людей получили помощь, среднее время отклика, доля успешных заявок, часы и очки влияния — прямо из базы данных.</p></div>
+        <div class="card"><span class="tag">ГЕЙМИФИКАЦИЯ</span><p class="body">XP, уровни, лидерборд и 6 значков: «Первая помощь», «10 добрых дел», «Герой сообщества», «Быстрый отклик», «Надёжный волонтёр», «100 часов».</p></div>
+      </div>
+      <div class="foot"><span>QO‘LLAB</span><span>08</span></div>
+    </section>
+
+    <!-- 9 -->
+    <section class="slide" data-time="25" data-title="Готовность">
+      <span class="eyebrow">Готовность</span>
+      <h2>Это работающий продукт, а не макет</h2>
+      <div class="grid g3">
+        <div class="card"><span class="tag">СТЕК</span><p class="body">Next.js 15, React 19, TypeScript, PostgreSQL + Prisma, Tailwind, Leaflet, Recharts</p></div>
+        <div class="card"><span class="tag">ТЕСТЫ</span><p class="body">Vitest (unit + API на реальной БД) и Playwright e2e; CI на каждый коммит</p></div>
+        <div class="card"><span class="tag">ДЕПЛОЙ</span><p class="body">Vercel + Supabase/Neon; без ключей интеграции деградируют мягко</p></div>
+      </div>
+      <div class="flow">
+        <span class="step">Google OAuth</span><span class="step">Email (Resend)</span><span class="step">Gemini: подсказка категории</span><span class="step">Upstash rate limit</span><span class="step">Supabase Storage</span>
+      </div>
+      <div class="foot"><span>QO‘LLAB</span><span>09</span></div>
+    </section>
+
+    <!-- 10 -->
+    <section class="slide dark" data-time="30" data-title="Демо">
+      <span class="eyebrow">Демо · ≈2 минуты</span>
+      <h2>Путь одной просьбы</h2>
+      <ol class="demo">
+        <li><span><b>Заявитель</b> создаёт просьбу: «Лекарства», срочность <i>Critical</i>, Ташкент → публикует.</span></li>
+        <li><span>Заявка проверена автоматически, <b>умный подбор</b> показывает волонтёров с баллами.</span></li>
+        <li><span>Переключаемся на <b>волонтёра</b> → «Принять» → «Начать» → «Готово» с часами.</span></li>
+        <li><span>Заявитель <b>подтверждает</b> → XP, значок «10 добрых дел» → отзыв.</span></li>
+        <li><span>Страница <b>Impact</b> — цифры обновились в реальном времени.</span></li>
+      </ol>
+      <div class="foot"><span>QO‘LLAB</span><span>10</span></div>
+    </section>
+
+    <!-- 11 -->
+    <section class="slide cover" data-time="15" data-title="Финал">
+      <span class="eyebrow" style="color:#4fd18f">Следующий шаг</span>
+      <p class="big">Har bir yaxshilik oʻz manzilini topsin.</p>
+      <p class="lead">Ищем пилотные организации и волонтёрские команды в городах Узбекистана.</p>
+      <p class="tagline" style="font-size:34px">QO‘LLAB · [контакт команды]</p>
+    </section>
+
+  </div>
+</div>
+
+<div class="bar" id="bar">
+  <div class="grp">
+    <button id="prev" aria-label="Предыдущий слайд">◀</button>
+    <span class="count" id="count">1 / 11</span>
+    <button id="next" aria-label="Следующий слайд">▶</button>
+  </div>
+  <div class="timeline">
+    <div class="segs" id="segs"><span class="needle" id="needle"></span></div>
+    <div class="tl-meta">
+      <span id="slideInfo">Титул · 0:00 из 0:15</span>
+      <span class="pace" id="pace">по плану</span>
+    </div>
+  </div>
+  <div class="grp">
+    <div class="clock-wrap"><small id="clockLabel">осталось</small><span class="clock" id="clock">5:00</span></div>
+  </div>
+  <div class="grp">
+    <button class="primary" id="toggle">▶ Старт</button>
+    <button id="reset" aria-label="Сбросить таймер">↺</button>
+    <label for="dur" class="keys">Длительность</label>
+    <select id="dur" aria-label="Длительность выступления">
+      <option value="180">3 мин</option>
+      <option value="300" selected>5 мин</option>
+      <option value="420">7 мин</option>
+      <option value="600">10 мин</option>
+    </select>
+    <button id="fs" aria-label="Полный экран">⛶</button>
+  </div>
+  <span class="keys">← → листать · Пробел/P таймер · R сброс · F экран · H скрыть панель</span>
+</div>
+
+<script>
+(function(){
+  const $ = id => document.getElementById(id);
+  const stage = $('stage'), viewport = $('viewport');
+  const slides = [...stage.querySelectorAll('.slide')];
+  const baseBudgets = slides.map(s => +s.dataset.time);
+  const baseTotal = baseBudgets.reduce((a,b)=>a+b,0);
+  let total = 300, budgets = [], starts = [];
+  let cur = 0, running = false, elapsed = 0, lastTick = 0;
+  let spent = slides.map(()=>0);
+  let warned60 = false, warned0 = false;
+
+  const fmt = s => { const neg = s < 0; s = Math.abs(Math.round(s)); return (neg?'-':'') + Math.floor(s/60) + ':' + String(s%60).padStart(2,'0'); };
+
+  function plan(){
+    budgets = baseBudgets.map(b => b * total / baseTotal);
+    starts = []; let acc = 0; budgets.forEach(b => { starts.push(acc); acc += b; });
+  }
+
+  // timeline segments
+  const segs = $('segs'), needle = $('needle');
+  const segEls = slides.map((s,i) => {
+    const b = document.createElement('button');
+    b.className = 'seg'; b.style.flex = baseBudgets[i];
+    b.title = (i+1) + '. ' + s.dataset.title; b.setAttribute('aria-label', b.title);
+    b.appendChild(document.createElement('i'));
+    b.addEventListener('click', () => go(i));
+    segs.insertBefore(b, needle);
+    return b;
+  });
+
+  function fit(){
+    const r = viewport.getBoundingClientRect();
+    const sc = Math.min((r.width - 32) / 1600, (r.height - 24) / 900);
+    stage.style.transform = `translate(-50%,-50%) scale(${Math.max(sc, .05)})`;
+  }
+  addEventListener('resize', fit);
+
+  function go(i){
+    i = Math.max(0, Math.min(slides.length-1, i));
+    if (i === cur) return;
+    slides[cur].classList.remove('active');
+    cur = i;
+    slides[cur].classList.add('active');
+    try { localStorage.setItem('qollab-pitch-slide', cur); } catch(e){}
+    render();
+  }
+
+  let toastEl = null, toastTimer = 0;
+  function toast(msg, kind){
+    if (!toastEl){ toastEl = document.createElement('div'); toastEl.className = 'toast'; toastEl.setAttribute('role','status'); viewport.appendChild(toastEl); }
+    toastEl.textContent = msg; toastEl.className = 'toast' + (kind ? ' ' + kind : ''); toastEl.hidden = false;
+    clearTimeout(toastTimer); toastTimer = setTimeout(() => toastEl.hidden = true, 3500);
+  }
+  let actx = null;
+  function beep(freq, n){
+    try {
+      actx = actx || new (window.AudioContext || window.webkitAudioContext)();
+      for (let k=0;k<n;k++){
+        const o = actx.createOscillator(), g = actx.createGain(), t = actx.currentTime + k*0.28;
+        o.frequency.value = freq; o.connect(g); g.connect(actx.destination);
+        g.gain.setValueAtTime(0.0001,t); g.gain.exponentialRampToValueAtTime(0.25,t+0.02); g.gain.exponentialRampToValueAtTime(0.0001,t+0.22);
+        o.start(t); o.stop(t+0.24);
+      }
+    } catch(e){}
+  }
+
+  function render(){
+    const sec = elapsed/1000, left = total - sec;
+    const clock = $('clock');
+    clock.textContent = left >= 0 ? fmt(left) : '+' + fmt(-left);
+    $('clockLabel').textContent = left >= 0 ? 'осталось' : 'перебор';
+    clock.className = 'clock' + (left < 0 ? ' over' : left <= 30 ? ' warn' : '');
+    $('count').textContent = (cur+1) + ' / ' + slides.length;
+    $('prev').disabled = cur === 0; $('next').disabled = cur === slides.length-1;
+
+    const sp = spent[cur]/1000, bud = budgets[cur];
+    $('slideInfo').textContent = slides[cur].dataset.title + ' · ' + fmt(sp) + ' из ' + fmt(bud);
+    // pace: where we are vs where the plan says we should be
+    const delta = sec - (starts[cur] + Math.min(sp, bud));
+    const pace = $('pace');
+    if (!running && sec === 0){ pace.textContent = 'план: ' + fmt(total); pace.className = 'pace'; }
+    else if (Math.abs(delta) < 3){ pace.textContent = 'по плану'; pace.className = 'pace'; }
+    else if (delta > 0){ pace.textContent = 'отставание ' + fmt(delta); pace.className = 'pace behind'; }
+    else { pace.textContent = 'опережение ' + fmt(-delta); pace.className = 'pace ahead'; }
+
+    segEls.forEach((el,i) => {
+      el.classList.toggle('cur', i === cur);
+      const s = spent[i]/1000;
+      el.classList.toggle('late', s > budgets[i]);
+      el.firstChild.style.width = Math.min(100, s / budgets[i] * 100) + '%';
+    });
+    const w = segs.clientWidth;
+    needle.style.left = Math.min(w-2, Math.max(0, sec / total * w)) + 'px';
+  }
+
+  function tick(now){
+    if (running){
+      const dt = now - lastTick; lastTick = now;
+      elapsed += dt; spent[cur] += dt;
+      const left = total - elapsed/1000;
+      if (!warned60 && left <= 60 && total > 60){ warned60 = true; toast('Осталась 1 минута', 'warn'); beep(660, 1); }
+      if (!warned0 && left <= 0){ warned0 = true; toast('Время вышло'); beep(880, 3); }
+      render();
+    }
+    requestAnimationFrame(tick);
+  }
+
+  function toggle(){
+    running = !running;
+    lastTick = performance.now();
+    const b = $('toggle');
+    b.textContent = running ? '❚❚ Пауза' : (elapsed ? '▶ Дальше' : '▶ Старт');
+    b.classList.toggle('running', running);
+    if (running && actx && actx.state === 'suspended') actx.resume();
+    if (running) beep(520, 0); // unlock audio on user gesture
+    render();
+  }
+  function reset(){
+    running = false; elapsed = 0; spent = slides.map(()=>0); warned60 = warned0 = false;
+    $('toggle').textContent = '▶ Старт'; $('toggle').classList.remove('running');
+    render();
+  }
+
+  $('prev').onclick = () => go(cur-1);
+  $('next').onclick = () => go(cur+1);
+  $('toggle').onclick = toggle;
+  $('reset').onclick = reset;
+  $('dur').onchange = e => {
+    total = +e.target.value; plan(); warned60 = (total - elapsed/1000) <= 60; warned0 = elapsed/1000 >= total;
+    try { localStorage.setItem('qollab-pitch-dur', total); } catch(err){}
+    render();
+  };
+  $('fs').onclick = () => {
+    const d = document;
+    if (d.fullscreenElement) d.exitFullscreen && d.exitFullscreen().catch(()=>{});
+    else d.documentElement.requestFullscreen && d.documentElement.requestFullscreen().catch(()=>{});
+  };
+  document.addEventListener('fullscreenchange', () => setTimeout(fit, 50));
+
+  document.addEventListener('keydown', e => {
+    if (e.target.tagName === 'SELECT') return;
+    const k = e.key;
+    if (['ArrowRight','PageDown','Enter'].includes(k)) { e.preventDefault(); go(cur+1); }
+    else if (['ArrowLeft','PageUp','Backspace'].includes(k)) { e.preventDefault(); go(cur-1); }
+    else if (k === ' ' || k === 'p' || k === 'P' || k === 'з' || k === 'З') { e.preventDefault(); toggle(); }
+    else if (k === 'r' || k === 'R' || k === 'к' || k === 'К') reset();
+    else if (k === 'f' || k === 'F' || k === 'а' || k === 'А') $('fs').click();
+    else if (k === 'h' || k === 'H' || k === 'р' || k === 'Р') { $('bar').classList.toggle('hidden-ui'); fit(); }
+    else if (k === 'Home') go(0);
+    else if (k === 'End') go(slides.length-1);
+  });
+  // swipe on touch screens
+  let tx = null;
+  viewport.addEventListener('touchstart', e => { tx = e.touches[0].clientX; }, {passive:true});
+  viewport.addEventListener('touchend', e => {
+    if (tx === null) return; const dx = e.changedTouches[0].clientX - tx; tx = null;
+    if (Math.abs(dx) > 50) go(cur + (dx < 0 ? 1 : -1));
+  });
+
+  try {
+    const d = +localStorage.getItem('qollab-pitch-dur'); if ([180,300,420,600].includes(d)){ total = d; $('dur').value = d; }
+  } catch(e){}
+  plan();
+  try {
+    const s = +localStorage.getItem('qollab-pitch-slide');
+    if (s > 0 && s < slides.length){ slides[0].classList.remove('active'); cur = s; slides[cur].classList.add('active'); }
+  } catch(e){}
+  fit(); render(); requestAnimationFrame(tick);
+})();
+</script>
+</body></html>
