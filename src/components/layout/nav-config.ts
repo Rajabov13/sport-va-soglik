@@ -98,40 +98,40 @@ export function navForRole(role: Role): NavSection[] {
   }
 }
 
-/** Primary destinations shown in the mobile bottom bar. `primary` renders as the raised centre action. */
+/** Primary destinations shown in the mobile bottom bar (short labels). `primary` renders as the raised centre action. */
 export function bottomNavForRole(role: Role): (NavItem & { primary?: boolean })[] {
   switch (role) {
     case "VOLUNTEER":
       return [
-        { href: "/dashboard/volunteer", label: "nav.volunteer", icon: HandHeart, exact: true },
-        { href: "/dashboard/volunteer/tasks", label: "nav.tasks", icon: ListChecks },
-        { href: "/map", label: "nav.map", icon: Map, primary: true },
-        { href: "/dashboard/messages", label: "nav.messages", icon: MessageCircle, badge: "messages" },
-        { href: "/dashboard/achievements", label: "nav.achievements", icon: Award },
+        { href: "/dashboard/volunteer", label: "navShort.hub", icon: HandHeart, exact: true },
+        { href: "/dashboard/volunteer/tasks", label: "navShort.tasks", icon: ListChecks },
+        { href: "/map", label: "navShort.map", icon: Map, primary: true },
+        { href: "/dashboard/messages", label: "navShort.chat", icon: MessageCircle, badge: "messages" },
+        { href: "/dashboard/achievements", label: "navShort.awards", icon: Award },
       ];
     case "ORGANIZATION":
       return [
-        { href: "/dashboard/organization", label: "nav.organization", icon: Building2, exact: true },
-        { href: "/dashboard/requests", label: "nav.requests", icon: ClipboardList, exact: true },
-        { href: "/dashboard/requests/create", label: "nav.createRequest", icon: PlusCircle, primary: true },
-        { href: "/dashboard/messages", label: "nav.messages", icon: MessageCircle, badge: "messages" },
-        { href: "/dashboard/notifications", label: "nav.notifications", icon: Bell, badge: "notifications" },
+        { href: "/dashboard/organization", label: "navShort.org", icon: Building2, exact: true },
+        { href: "/dashboard/requests", label: "navShort.requests", icon: ClipboardList, exact: true },
+        { href: "/dashboard/requests/create", label: "navShort.create", icon: PlusCircle, primary: true },
+        { href: "/dashboard/messages", label: "navShort.chat", icon: MessageCircle, badge: "messages" },
+        { href: "/campaigns", label: "navShort.campaigns", icon: Megaphone },
       ];
     case "ADMIN":
       return [
-        { href: "/admin", label: "nav.dashboard", icon: LayoutDashboard, exact: true },
-        { href: "/admin/requests", label: "nav.adminRequests", icon: FolderKanban },
-        { href: "/admin/reports", label: "nav.adminReports", icon: ShieldAlert, primary: true },
-        { href: "/admin/users", label: "nav.adminUsers", icon: Users },
-        { href: "/dashboard/notifications", label: "nav.notifications", icon: Bell, badge: "notifications" },
+        { href: "/admin", label: "navShort.home", icon: LayoutDashboard, exact: true },
+        { href: "/admin/requests", label: "navShort.requests", icon: FolderKanban },
+        { href: "/admin/reports", label: "navShort.reports", icon: ShieldAlert, primary: true },
+        { href: "/admin/users", label: "navShort.users", icon: Users },
+        { href: "/admin/analytics", label: "navShort.analytics", icon: BarChart3 },
       ];
     default:
       return [
-        { href: "/dashboard", label: "nav.dashboard", icon: LayoutDashboard, exact: true },
-        { href: "/dashboard/requests", label: "nav.requests", icon: ClipboardList, exact: true },
-        { href: "/dashboard/requests/create", label: "nav.createRequest", icon: PlusCircle, primary: true },
-        { href: "/dashboard/messages", label: "nav.messages", icon: MessageCircle, badge: "messages" },
-        { href: "/dashboard/notifications", label: "nav.notifications", icon: Bell, badge: "notifications" },
+        { href: "/dashboard", label: "navShort.home", icon: LayoutDashboard, exact: true },
+        { href: "/dashboard/requests", label: "navShort.requests", icon: ClipboardList, exact: true },
+        { href: "/dashboard/requests/create", label: "navShort.create", icon: PlusCircle, primary: true },
+        { href: "/dashboard/messages", label: "navShort.chat", icon: MessageCircle, badge: "messages" },
+        { href: "/map", label: "navShort.map", icon: Map },
       ];
   }
 }

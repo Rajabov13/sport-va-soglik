@@ -212,11 +212,12 @@ export function RequestDetailView({ initial }: { initial: RequestDetailDTO }) {
         </p>
       </header>
 
-      <div className="grid gap-5 lg:grid-cols-[1fr_340px]">
-        <div className="grid min-w-0 gap-5">
-          <div className="lg:hidden">
-            <ActionPanel r={r} />
-          </div>
+      {/* One action panel: above the content on mobile, in the right column on desktop. */}
+      <div className="grid gap-5 lg:grid-cols-[1fr_340px] lg:grid-rows-[auto_1fr]">
+        <div className="min-w-0 lg:col-start-2 lg:row-start-1">
+          <ActionPanel r={r} />
+        </div>
+        <div className="grid min-w-0 content-start gap-5 lg:col-start-1 lg:row-span-2 lg:row-start-1">
           <Card>
             <CardContent className="grid gap-5 p-4 sm:p-6">
               <p className="whitespace-pre-line text-[15px] leading-relaxed">{r.description}</p>
@@ -313,10 +314,7 @@ export function RequestDetailView({ initial }: { initial: RequestDetailDTO }) {
           )}
         </div>
 
-        <aside className="grid h-fit min-w-0 gap-5 lg:sticky lg:top-24">
-          <div className="hidden lg:block">
-            <ActionPanel r={r} />
-          </div>
+        <aside className="grid h-fit min-w-0 gap-5 lg:col-start-2 lg:row-start-2">
           <Card>
             <CardHeader>
               <CardTitle>{t("request.timeline")}</CardTitle>

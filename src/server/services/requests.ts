@@ -536,6 +536,8 @@ export async function withdrawFromRequest(actor: Actor, id: string) {
     await transition(tx, id, ["ACCEPTED", "IN_PROGRESS"], "MATCHING", actor.id, { acceptedAt: null, startedAt: null, matchingAt: new Date() }, "withdrawn");
     await tx.requestAssignment.update({ where: { id: assignment.id }, data: { status: "CANCELLED", cancelledAt: new Date() } });
     await tx.requestMatch.updateMany({ where: { requestId: id, volunteerId: actor.id }, data: { declinedAt: new Date() } });
+    // A volunteer who withdraws loses access to the private conversation.
+    await tx.conversationParticipant.deleteMany({ where: { conversation: { requestId: id }, userId: actor.id } });
     await recordCancellation(tx, actor.id);
   });
   await notify(request.requesterId, "STATUS_CHANGED", { title: request.title, status: "MATCHING" }, `/dashboard/requests/${id}`);

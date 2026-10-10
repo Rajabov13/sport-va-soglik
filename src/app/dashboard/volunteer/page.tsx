@@ -34,8 +34,10 @@ export default async function VolunteerHubPage() {
         <p className="mt-1 text-muted-foreground">{t("dashboard.volunteerSubtitle")}</p>
       </div>
       <DemoGuide />
-      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-[1.3fr_repeat(4,1fr)]">
-        <LevelCard xp={s.xp} {...s.level} />
+      <div className="grid grid-cols-2 gap-3 lg:grid-cols-[1.3fr_repeat(4,1fr)]">
+        <div className="col-span-2 grid lg:col-span-1">
+          <LevelCard xp={s.xp} {...s.level} />
+        </div>
         <StatCard label={t("volunteer.completed")} value={n(s.completedCount)} icon={<CheckCircle2 />} tone="accent" />
         <StatCard label={t("volunteer.hours")} value={n(s.hoursTotal)} icon={<Clock />} />
         <StatCard label={t("volunteer.rating")} value={s.ratingAvg ? s.ratingAvg.toFixed(2) : "—"} icon={<Star />} tone="amber" hint={`${s.ratingCount} ${t("volunteer.reviews").toLowerCase()}`} />

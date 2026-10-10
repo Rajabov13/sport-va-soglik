@@ -1,7 +1,7 @@
 "use client";
 import * as React from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useSearchParams } from "next/navigation";
 import { Bell, Menu } from "lucide-react";
 import { Dialog, DialogTitle, DialogTrigger, SheetContent } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -64,12 +64,25 @@ function SidebarNav({ onNavigate }: { onNavigate?: () => void }) {
   );
 }
 
+/** Screens with their own sticky action bar or composer hide the bottom bar on mobile. */
+function useFocusedScreen() {
+  const pathname = usePathname();
+  const params = useSearchParams();
+  return (
+    pathname === "/dashboard/requests/create" ||
+    /^\/dashboard\/requests\/[^/]+\/edit$/.test(pathname) ||
+    pathname === "/dashboard/volunteer/profile" ||
+    (pathname === "/dashboard/messages" && !!params.get("c"))
+  );
+}
+
 function BottomNav() {
   const { user } = useSession();
   const { t } = useI18n();
   const pathname = usePathname();
+  const focused = useFocusedScreen();
   const { data } = useSummary(!!user);
-  if (!user) return null;
+  if (!user || focused) return null;
   return (
     <nav className="fixed inset-x-0 bottom-0 z-40 border-t bg-card/95 pb-safe backdrop-blur lg:hidden" aria-label={t("common.menu")}>
       <ul className="mx-auto grid max-w-lg grid-cols-5">
@@ -156,7 +169,9 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           {children}
         </main>
       </div>
-      <BottomNav />
+      <React.Suspense fallback={null}>
+        <BottomNav />
+      </React.Suspense>
     </div>
   );
 }

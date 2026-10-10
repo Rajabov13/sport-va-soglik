@@ -1,4 +1,3 @@
-/* eslint-disable no-console */
 import { PrismaClient, type Prisma, type Urgency, type RequestStatus } from "@prisma/client";
 import bcrypt from "bcryptjs";
 import { CAMPAIGNS, CATEGORIES, CHAT_LINES, FEMALE_FIRST, LAST, LOCATIONS, MALE_FIRST, ORGANIZATIONS, REQUEST_TEMPLATES, REVIEW_COMMENTS, SKILL_POOL } from "./seed-data";

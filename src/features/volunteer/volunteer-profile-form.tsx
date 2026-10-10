@@ -275,7 +275,7 @@ export function VolunteerProfileForm({ userId, initial }: { userId: string; init
         </CardContent>
       </Card>
 
-      <div className="fixed inset-x-0 bottom-16 z-30 border-t bg-card/95 p-3 backdrop-blur lg:static lg:border-0 lg:bg-transparent lg:p-0">
+      <div className="fixed inset-x-0 bottom-0 z-30 border-t bg-card/95 p-3 backdrop-blur lg:static lg:border-0 lg:bg-transparent lg:p-0">
         <div className="mx-auto flex max-w-6xl lg:justify-end">
           <Button type="submit" size="lg" className="w-full lg:w-auto" loading={isSubmitting} data-testid="save-volunteer-profile">
             {t("common.save")}

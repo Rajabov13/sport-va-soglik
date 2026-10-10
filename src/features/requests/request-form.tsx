@@ -400,14 +400,15 @@ export function RequestForm({ initial }: { initial?: RequestFormInitial }) {
         </CardContent>
       </Card>
 
-      <div className="fixed inset-x-0 bottom-16 z-30 border-t bg-card/95 p-3 backdrop-blur pb-safe lg:static lg:z-auto lg:border-0 lg:bg-transparent lg:p-0">
+      <div className="fixed inset-x-0 bottom-0 z-30 border-t bg-card/95 p-3 backdrop-blur pb-safe lg:static lg:z-auto lg:border-0 lg:bg-transparent lg:p-0">
         <div className="mx-auto flex max-w-6xl gap-2 lg:justify-end">
           {(!initial || initial.status === "DRAFT") && (
-            <Button type="submit" variant="outline" className="flex-1 lg:flex-none" loading={isSubmitting && mode === "draft"} disabled={isSubmitting} onClick={() => setMode("draft")}>
-              {t("requests.saveDraft")}
+            <Button type="submit" variant="outline" size="lg" className="min-w-0 flex-1 lg:flex-none" loading={isSubmitting && mode === "draft"} disabled={isSubmitting} onClick={() => setMode("draft")}>
+              <span className="truncate sm:hidden">{t("requests.saveDraftShort")}</span>
+              <span className="hidden sm:inline">{t("requests.saveDraft")}</span>
             </Button>
           )}
-          <Button type="submit" className="flex-[2] lg:flex-none" size="lg" loading={isSubmitting && mode === "publish"} disabled={isSubmitting} onClick={() => setMode("publish")} data-testid="publish-request">
+          <Button type="submit" className="min-w-0 flex-[2] lg:flex-none" size="lg" loading={isSubmitting && mode === "publish"} disabled={isSubmitting} onClick={() => setMode("publish")} data-testid="publish-request">
             {initial && initial.status !== "DRAFT" ? t("common.save") : isSubmitting ? t("requests.publishing") : t("requests.publish")}
           </Button>
         </div>
