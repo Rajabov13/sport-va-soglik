@@ -7,7 +7,7 @@ import type { Translator } from "@/i18n/translate";
 export function LinkPagination({ page, totalPages, href, t }: { page: number; totalPages: number; href: (page: number) => string; t: Translator }) {
   if (totalPages <= 1) return null;
   return (
-    <nav className="mt-6 flex items-center justify-between gap-3" aria-label="pagination">
+    <nav className="mt-6 flex items-center justify-between gap-3" aria-label={t("common.pagination")}>
       {page > 1 ? (
         <Button asChild variant="outline" size="sm">
           <Link href={href(page - 1)}>

@@ -41,7 +41,7 @@ export function ChartCard({ title, legend, table, empty, children, className }: 
           size="icon"
           className="shrink-0 text-muted-foreground"
           aria-pressed={showTable}
-          aria-label={showTable ? title : `${title} — table`}
+          aria-label={showTable ? t("impact.showChart") : t("impact.showTable")}
           onClick={() => setShowTable((s) => !s)}
         >
           {showTable ? <BarChart3 /> : <Table2 />}

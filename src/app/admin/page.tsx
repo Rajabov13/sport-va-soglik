@@ -52,7 +52,7 @@ export default async function AdminPage() {
               {o.recentAudit.map((a) => (
                 <li key={a.id} className="flex flex-wrap items-center justify-between gap-2 rounded-xl border px-3 py-2">
                   <span className="min-w-0">
-                    <span className="font-medium">{a.actor?.name ?? "system"}</span> <code className="rounded bg-secondary px-1.5 py-0.5 text-xs">{a.action}</code>
+                    <span className="font-medium">{a.actor?.name ?? t("common.system")}</span> <code className="rounded bg-secondary px-1.5 py-0.5 text-xs">{a.action}</code>
                   </span>
                   <span className="text-xs text-muted-foreground">{relativeTime(locale, a.createdAt)}</span>
                 </li>

@@ -56,6 +56,8 @@ export const ru: Dictionary = {
     skipToContent: "Перейти к содержимому",
     learnMore: "Подробнее",
     you: "Вы",
+    pagination: "Страницы",
+    system: "Система",
     today: "Сегодня",
   },
   nav: {
@@ -682,6 +684,8 @@ export const ru: Dictionary = {
     volunteers: "Волонтёры",
     hours: "Часы",
     requests: "Заявки",
+    showTable: "Показать таблицей",
+    showChart: "Показать графиком",
     noData: "За этот период данных пока нет",
   },
   admin: {

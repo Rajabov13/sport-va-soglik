@@ -56,6 +56,8 @@ export const uz: Dictionary = {
     skipToContent: "Asosiy kontentga oʻtish",
     learnMore: "Batafsil",
     you: "Siz",
+    pagination: "Sahifalar",
+    system: "Tizim",
     today: "Bugun",
   },
   nav: {
@@ -682,6 +684,8 @@ export const uz: Dictionary = {
     volunteers: "Koʻngillilar",
     hours: "Soatlar",
     requests: "Arizalar",
+    showTable: "Jadval koʻrinishida",
+    showChart: "Diagramma koʻrinishida",
     noData: "Bu davr uchun hali maʼlumot yoʻq",
   },
   admin: {

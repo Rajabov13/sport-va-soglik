@@ -7,7 +7,7 @@ export function Pagination({ page, totalPages, onChange }: { page: number; total
   const { t } = useI18n();
   if (totalPages <= 1) return null;
   return (
-    <nav className="mt-6 flex items-center justify-between gap-3" aria-label="pagination">
+    <nav className="mt-6 flex items-center justify-between gap-3" aria-label={t("common.pagination")}>
       <Button variant="outline" size="sm" disabled={page <= 1} onClick={() => onChange(page - 1)}>
         <ChevronLeft /> {t("common.previous")}
       </Button>

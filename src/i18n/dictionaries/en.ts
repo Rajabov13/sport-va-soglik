@@ -54,6 +54,8 @@ export const en = {
     skipToContent: "Skip to content",
     learnMore: "Learn more",
     you: "You",
+    pagination: "Pagination",
+    system: "System",
     today: "Today",
   },
   nav: {
@@ -680,6 +682,8 @@ export const en = {
     volunteers: "Volunteers",
     hours: "Hours",
     requests: "Requests",
+    showTable: "Show as table",
+    showChart: "Show as chart",
     noData: "No data for this period yet",
   },
   admin: {
