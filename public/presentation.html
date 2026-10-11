@@ -1,0 +1,201 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>QO‘LLAB — Taqdimot</title>
+<style>
+:root{--bg:#0b1220;--fg:#f8fafc;--muted:#94a3b8;--acc:#22c55e;--acc2:#38bdf8;--warn:#f59e0b;--bad:#ef4444}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;background:var(--bg);color:var(--fg);font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;overflow:hidden}
+#start{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:24px;z-index:50;background:radial-gradient(circle at 30% 20%,#14532d 0,var(--bg) 60%)}
+#start h1{font-size:clamp(40px,8vw,96px);letter-spacing:2px}
+#start p{color:var(--muted);font-size:20px;text-align:center;padding:0 16px}
+.btn{background:var(--acc);color:#052e16;border:0;border-radius:14px;padding:16px 36px;font-size:22px;font-weight:700;cursor:pointer}
+.btn.ghost{background:transparent;color:var(--fg);border:2px solid #334155;font-size:16px;padding:10px 18px}
+.lang{display:flex;gap:8px}
+.lang button.on{border-color:var(--acc);color:var(--acc)}
+.slide{position:fixed;inset:0;display:flex;flex-direction:column;justify-content:center;padding:6vh 8vw;opacity:0;transform:translateY(30px);transition:.7s;pointer-events:none}
+.slide.on{opacity:1;transform:none;pointer-events:auto}
+.kicker{color:var(--acc);font-weight:700;text-transform:uppercase;letter-spacing:3px;font-size:clamp(14px,1.6vw,20px);margin-bottom:18px}
+.slide h2{font-size:clamp(34px,5.5vw,76px);line-height:1.08;margin-bottom:28px;max-width:1100px}
+.slide p.big{font-size:clamp(20px,2.4vw,34px);color:#cbd5e1;max-width:1000px;line-height:1.4}
+.emoji{font-size:clamp(60px,9vw,120px);margin-bottom:12px}
+.flow{display:flex;flex-wrap:wrap;gap:12px;margin-top:10px}
+.flow span{background:#1e293b;border:1px solid #334155;border-radius:999px;padding:12px 20px;font-size:clamp(16px,1.8vw,24px)}
+.flow span.g{background:#14532d;border-color:var(--acc)}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:18px;margin-top:10px}
+.card{background:#111c30;border:1px solid #1e3a5f;border-radius:20px;padding:24px}
+.card b{display:block;font-size:clamp(38px,4.5vw,64px);color:var(--acc2);line-height:1}
+.card small{display:block;color:var(--muted);margin-top:10px;font-size:clamp(15px,1.4vw,19px)}
+.bar{height:16px;border-radius:8px;background:#1e293b;overflow:hidden;margin:6px 0 16px}
+.bar i{display:block;height:100%;background:linear-gradient(90deg,var(--acc),var(--acc2));width:0;transition:width 1.6s ease}
+.row{display:flex;justify-content:space-between;font-size:clamp(15px,1.6vw,22px)}
+#timer{position:fixed;top:18px;right:18px;z-index:40;background:rgba(15,23,42,.92);border:2px solid var(--acc);border-radius:16px;padding:10px 18px;text-align:right;min-width:150px;display:none}
+#timer .t{font-size:40px;font-weight:800;font-variant-numeric:tabular-nums;line-height:1}
+#timer .ph{font-size:13px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-top:4px}
+#timer.warn{border-color:var(--warn)}#timer.warn .t{color:var(--warn)}
+#timer.bad{border-color:var(--bad)}#timer.bad .t{color:var(--bad);animation:blink 1s infinite}
+@keyframes blink{50%{opacity:.4}}
+#progress{position:fixed;left:0;bottom:0;height:6px;background:var(--acc);z-index:40;width:0;transition:width 1s linear}
+#dots{position:fixed;bottom:22px;left:50%;transform:translateX(-50%);display:flex;gap:8px;z-index:30}
+#dots i{width:10px;height:10px;border-radius:50%;background:#334155}#dots i.on{background:var(--acc)}
+#site{position:fixed;inset:0;display:none;z-index:20;background:#fff}
+#site iframe{width:100%;height:100%;border:0}
+#site .open{position:fixed;left:18px;top:18px;z-index:41}
+#end{position:fixed;inset:0;display:none;z-index:45;flex-direction:column;align-items:center;justify-content:center;gap:20px;background:var(--bg);text-align:center;padding:16px}
+#end h2{font-size:clamp(44px,8vw,110px)}
+@media (max-width:600px){#timer{top:10px;right:10px;min-width:0;padding:6px 10px}#timer .t{font-size:26px}.slide{padding:80px 16px}}
+</style>
+</head>
+<body>
+
+<div id="start">
+  <div class="lang"><button class="btn ghost on" data-l="ru">RU</button><button class="btn ghost" data-l="uz">UZ</button></div>
+  <h1>QO‘LLAB</h1>
+  <p data-i="startHint"></p>
+  <button class="btn" id="go">▶ Start 5:00</button>
+  <p style="font-size:14px" data-i="keys"></p>
+</div>
+
+<div id="timer"><div class="t">5:00</div><div class="ph"></div></div>
+<div id="progress"></div>
+<div id="dots"></div>
+<main id="slides"></main>
+
+<div id="site">
+  <iframe id="frame" title="QO‘LLAB" allow="geolocation"></iframe>
+  <a class="btn ghost open" id="openTab" target="_blank" rel="noopener" style="background:#0b1220;text-decoration:none"></a>
+</div>
+
+<div id="end">
+  <div class="emoji">🤝</div>
+  <h2 data-i="endTitle"></h2>
+  <p class="big" style="color:var(--muted);font-size:24px" data-i="endSub"></p>
+  <a class="btn" id="endLink" style="text-decoration:none"></a>
+</div>
+
+<script>
+const SITE = "https://qollab-ijtimoiy-loyiha-t6fi.vercel.app/";
+const TOTAL = 300, PRES = 120; // 5 min total: 2 min slides + 3 min site demo
+
+const T = {
+ru:{
+ startHint:"5 минут: 2 минуты презентация → 3 минуты показ сайта",
+ keys:"← → — листать слайды · S — сразу к сайту · Esc — пауза",
+ phPres:"Презентация", phDemo:"Показ сайта", openTab:"↗ Открыть в новой вкладке",
+ endTitle:"Спасибо!", endSub:"Har bir yaxshilik oʻz manzilini topsin — каждое доброе дело найдёт свой адрес.", endLink:"Перейти на сайт →",
+ slides:[
+  {k:"История", e:"👵", h:"Ташкент, 8 вечера. Бабушке Мукаддас нужны лекарства.", p:"Внуки далеко, аптека в двух кварталах — но для неё это непреодолимо. В соседнем доме живёт студент Азиз, который рад бы помочь. Они никогда не узнают друг о друге."},
+  {k:"Проблема", e:"🧩", h:"Доброта есть. Связи — нет.", p:"Просьбы теряются в Telegram-чатах, волонтёры не знают, кому нужна помощь рядом, а организации не видят реального результата своей работы."},
+  {k:"Решение", e:"💚", h:"QO‘LLAB — Yaxshilikni birlashtiramiz", p:"Платформа, которая соединяет тех, кому нужна помощь, волонтёров и социальные организации — и превращает каждую просьбу в измеримый результат."},
+  {k:"Как это работает", h:"Одна просьба — один путь до результата", flow:["📝 Заявка","🛡️ Авто-проверка","🎯 Умный подбор","🙋 Волонтёр принял","💬 Чат","✅ Выполнено","⭐ Отзыв и XP"]},
+  {k:"Умный подбор", h:"Кто лучше всех поможет — решает алгоритм 0–100", bars:[["📍 Расстояние",30],["🛠️ Навыки",25],["🕒 Доступность",15],["⚡ Срочность",10],["🎓 Опыт",10],["⭐ Репутация",10]]},
+  {k:"Конец истории", e:"🌙", h:"Через 12 минут Азиз получил уведомление. Через 40 — лекарства были у бабушки.", p:"А Азиз получил первый значок «Первая помощь» и стал частью сообщества."},
+  {k:"Статистика платформы", h:"QO‘LLAB в цифрах", cards:[["9","категорий помощи"],["4","роли: пользователь, волонтёр, организация, админ"],["3","языка: узбекский, русский, английский"],["6","факторов умного подбора"],["6","значков и уровни XP"],["≈1 км","точность карты — приватность"]]},
+  {k:"Почему мы", h:"Безопасно. Прозрачно. Мотивирует.", flow:["🛡️ Модерация и жалобы","🗺️ Карта помощи","📊 Живая статистика влияния","🏆 Рейтинг волонтёров","📱 PWA — как приложение"], p:"А теперь — покажем вживую 👉"}
+ ]},
+uz:{
+ startHint:"5 daqiqa: 2 daqiqa taqdimot → 3 daqiqa saytni ko‘rsatish",
+ keys:"← → — slaydlar · S — darhol saytga · Esc — pauza",
+ phPres:"Taqdimot", phDemo:"Sayt namoyishi", openTab:"↗ Yangi oynada ochish",
+ endTitle:"Rahmat!", endSub:"Har bir yaxshilik oʻz manzilini topsin.", endLink:"Saytga o‘tish →",
+ slides:[
+  {k:"Hikoya", e:"👵", h:"Toshkent, kechki soat 8. Muqaddas buviga dori kerak.", p:"Nevaralari uzoqda, dorixona ikki mahalla narida — lekin u uchun bu yetib bo‘lmas masofa. Qo‘shni uyda yordam berishga tayyor talaba Aziz yashaydi. Ular bir-birini hech qachon bilishmaydi."},
+  {k:"Muammo", e:"🧩", h:"Mehr bor. Bog‘lanish yo‘q.", p:"So‘rovlar Telegram-chatlarda yo‘qoladi, ko‘ngillilar yaqin atrofda kimga yordam kerakligini bilmaydi, tashkilotlar esa ishining real natijasini ko‘rmaydi."},
+  {k:"Yechim", e:"💚", h:"QO‘LLAB — Yaxshilikni birlashtiramiz", p:"Yordamga muhtojlar, ko‘ngillilar va ijtimoiy tashkilotlarni bog‘laydigan platforma — har bir so‘rovni o‘lchanadigan natijaga aylantiradi."},
+  {k:"Qanday ishlaydi", h:"Bitta so‘rov — natijagacha bitta yo‘l", flow:["📝 So‘rov","🛡️ Avto-tekshiruv","🎯 Aqlli tanlov","🙋 Ko‘ngilli qabul qildi","💬 Chat","✅ Bajarildi","⭐ Sharh va XP"]},
+  {k:"Aqlli tanlov", h:"Kim eng yaxshi yordam beradi — 0–100 ball algoritmi", bars:[["📍 Masofa",30],["🛠️ Ko‘nikmalar",25],["🕒 Bo‘sh vaqt",15],["⚡ Shoshilinchlik",10],["🎓 Tajriba",10],["⭐ Obro‘",10]]},
+  {k:"Hikoya yakuni", e:"🌙", h:"12 daqiqadan so‘ng Azizga bildirishnoma keldi. 40 daqiqada dori buvida edi.", p:"Aziz esa «Birinchi yordam» nishonini oldi va jamoaning bir qismiga aylandi."},
+  {k:"Platforma statistikasi", h:"QO‘LLAB raqamlarda", cards:[["9","yordam toifasi"],["4","rol: foydalanuvchi, ko‘ngilli, tashkilot, admin"],["3","til: o‘zbek, rus, ingliz"],["6","aqlli tanlov omili"],["6","nishon va XP darajalari"],["≈1 km","xarita aniqligi — maxfiylik"]]},
+  {k:"Nega biz", h:"Xavfsiz. Shaffof. Ilhomlantiradi.", flow:["🛡️ Moderatsiya","🗺️ Yordam xaritasi","📊 Jonli ta’sir statistikasi","🏆 Ko‘ngillilar reytingi","📱 PWA — ilova kabi"], p:"Endi esa — jonli ko‘rsatamiz 👉"}
+ ]}
+};
+
+let L="ru", idx=0, elapsed=0, timer=null, paused=false, phase="pres";
+const $=s=>document.querySelector(s);
+const per = PRES / T.ru.slides.length; // 15 s per slide
+
+function i18n(){
+  document.documentElement.lang=L;
+  document.querySelectorAll("[data-i]").forEach(e=>e.textContent=T[L][e.dataset.i]);
+  $("#openTab").textContent=T[L].openTab; $("#openTab").href=SITE;
+  $("#endLink").textContent=T[L].endLink; $("#endLink").href=SITE;
+  build();
+}
+function build(){
+  const box=$("#slides"); box.innerHTML=""; $("#dots").innerHTML="";
+  T[L].slides.forEach((s,n)=>{
+    let h=`<section class="slide"><div class="kicker">${n+1}/${T[L].slides.length} · ${s.k}</div>`;
+    if(s.e) h+=`<div class="emoji">${s.e}</div>`;
+    h+=`<h2>${s.h}</h2>`;
+    if(s.flow) h+=`<div class="flow">${s.flow.map((f,j)=>`<span class="${j==s.flow.length-1?'g':''}">${f}</span>`).join("")}</div>`;
+    if(s.bars) h+=s.bars.map(([a,v])=>`<div class="row"><span>${a}</span><b>${v}</b></div><div class="bar"><i data-w="${v/30*100}"></i></div>`).join("");
+    if(s.cards) h+=`<div class="grid">${s.cards.map(([b,t])=>`<div class="card"><b data-n="${b}">${b}</b><small>${t}</small></div>`).join("")}</div>`;
+    if(s.p) h+=`<p class="big" style="margin-top:22px">${s.p}</p>`;
+    box.insertAdjacentHTML("beforeend",h+"</section>");
+    $("#dots").insertAdjacentHTML("beforeend","<i></i>");
+  });
+  show(idx);
+}
+function show(n){
+  idx=Math.max(0,Math.min(n,T[L].slides.length-1));
+  document.querySelectorAll(".slide").forEach((s,j)=>{
+    s.classList.toggle("on",j===idx);
+    s.querySelectorAll(".bar i").forEach(b=>b.style.width=j===idx?b.dataset.w+"%":0);
+    if(j===idx) s.querySelectorAll(".card b").forEach(countUp);
+  });
+  document.querySelectorAll("#dots i").forEach((d,j)=>d.classList.toggle("on",j<=idx));
+}
+function countUp(el){
+  const m=el.dataset.n.match(/^(\D*)(\d+)(.*)$/); if(!m) return;
+  const target=+m[2]; let v=0; const st=setInterval(()=>{v++;el.textContent=m[1]+v+m[3];if(v>=target)clearInterval(st)},90);
+}
+const fmt=s=>Math.floor(s/60)+":"+String(s%60).padStart(2,"0");
+function tick(){
+  if(paused) return;
+  elapsed++;
+  const left=TOTAL-elapsed;
+  if(phase==="pres"){
+    const want=Math.min(Math.floor(elapsed/per),T[L].slides.length-1);
+    if(want>idx) show(want);
+    if(elapsed>=PRES) toSite();
+  }
+  render(left);
+  if(left<=0) finish();
+}
+function render(left){
+  const t=$("#timer"); t.querySelector(".t").textContent=fmt(Math.max(left,0));
+  const phLeft = phase==="pres" ? PRES-elapsed : left;
+  t.querySelector(".ph").textContent=(phase==="pres"?T[L].phPres:T[L].phDemo)+" · "+fmt(Math.max(phLeft,0));
+  t.className = left<=30?"bad":(phase==="pres"&&PRES-elapsed<=15)||left<=60?"warn":"";
+  $("#progress").style.width=(elapsed/TOTAL*100)+"%";
+}
+function toSite(){
+  if(phase!=="pres") return;
+  phase="demo"; clearInterval(timer);
+  // The site refuses to be embedded, so go there directly; it shows the remaining countdown itself.
+  location.href = SITE + "#demo=" + (Date.now() + (TOTAL - Math.max(elapsed, PRES)) * 1000);
+}
+function finish(){
+  clearInterval(timer); phase="end";
+  $("#end").style.display="flex";
+  setTimeout(()=>location.href=SITE,4000); // timer over → go to the site
+}
+document.querySelectorAll(".lang button").forEach(b=>b.onclick=()=>{
+  document.querySelectorAll(".lang button").forEach(x=>x.classList.remove("on"));b.classList.add("on");L=b.dataset.l;i18n();});
+$("#go").onclick=()=>{
+  $("#start").style.display="none"; $("#timer").style.display="block";
+  document.documentElement.requestFullscreen?.().catch(()=>{});
+  render(TOTAL); timer=setInterval(tick,1000);
+};
+addEventListener("keydown",e=>{
+  if(phase==="pres"&&["ArrowRight"," ","PageDown"].includes(e.key)) show(idx+1);
+  if(phase==="pres"&&["ArrowLeft","PageUp"].includes(e.key)) show(idx-1);
+  if(e.key==="s"||e.key==="S"||e.key==="ы"||e.key==="Ы") toSite();
+  if(e.key==="Escape"||e.key==="p") paused=!paused;
+});
+i18n();
+</script>
+</body>
+</html>
