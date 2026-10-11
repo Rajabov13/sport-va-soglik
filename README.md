@@ -143,11 +143,11 @@ All variables are documented in [`.env.example`](.env.example). The essentials:
 | `EMAIL_PROVIDER`, `RESEND_API_KEY`, `EMAIL_FROM` | – | Email notifications |
 | `UPSTASH_REDIS_REST_URL` / `UPSTASH_REDIS_REST_TOKEN` | – | Distributed rate limiting |
 | `GEMINI_API_KEY`, `GEMINI_MODEL`, `GEMINI_FALLBACK_MODEL` | – | AI-assisted category/urgency suggestion — primary model, then a lighter fallback model on overload, then the keyword classifier |
-| `NEXT_PUBLIC_MAP_TILE_URL` | – | Optional custom map tiles (e.g. MapTiler with a real key). Leave empty for the keyless simple CARTO light basemap |
+| `NEXT_PUBLIC_MAP_TILE_URL` | – | Optional custom map tiles (e.g. MapTiler with a real key). Leave empty for the keyless OpenStreetMap tiles |
 
 Integrations without keys degrade gracefully: no Google button errors (a friendly message is shown),
 uploads go to local disk, emails are logged, rate limiting is in-memory, classification uses keywords,
-the map uses free CARTO/OSM tiles.
+the map uses free OpenStreetMap tiles.
 
 ## Database, migrations & seed
 
