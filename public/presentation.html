@@ -173,9 +173,9 @@ function render(left){
 }
 function toSite(){
   if(phase!=="pres") return;
-  phase="demo"; elapsed=Math.max(elapsed,PRES);
-  $("#slides").style.display=$("#dots").style.display="none";
-  $("#frame").src=SITE; $("#site").style.display="block";
+  phase="demo"; clearInterval(timer);
+  // The site refuses to be embedded, so go there directly; it shows the remaining countdown itself.
+  location.href = SITE + "#demo=" + (Date.now() + (TOTAL - Math.max(elapsed, PRES)) * 1000);
 }
 function finish(){
   clearInterval(timer); phase="end";

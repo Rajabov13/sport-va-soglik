@@ -39,6 +39,13 @@ export const viewport: Viewport = {
 const INSTALL_PROMPT_CAPTURE =
   "window.addEventListener('beforeinstallprompt',function(e){e.preventDefault();window.__qollabInstall=e;window.dispatchEvent(new Event('qollab-installable'))});";
 
+// Presentation demo timer: /presentation.html hands over via "#demo=<end epoch ms>"; the countdown survives navigation in this tab.
+const DEMO_TIMER =
+  "(function(){try{var m=location.hash.match(/demo=(\\d+)/);if(m){sessionStorage.setItem('qollabDemoEnd',m[1]);history.replaceState(null,'',location.pathname+location.search)}var end=+sessionStorage.getItem('qollabDemoEnd');if(!end)return;" +
+  "function run(){var d=document.createElement('div');d.style.cssText='position:fixed;top:12px;right:12px;z-index:2147483647;background:rgba(15,23,42,.92);color:#fff;border:2px solid #22c55e;border-radius:14px;padding:8px 16px;font:800 32px system-ui;font-variant-numeric:tabular-nums;pointer-events:none';document.body.appendChild(d);" +
+  "function t(){var l=Math.max(0,Math.round((end-Date.now())/1000));d.textContent=Math.floor(l/60)+':'+('0'+l%60).slice(-2);d.style.borderColor=d.style.color=l<=30?'#ef4444':l<=60?'#f59e0b':'#fff';if(l<=0){d.style.borderColor='#ef4444';sessionStorage.removeItem('qollabDemoEnd');clearInterval(i)}}var i=setInterval(t,1000);t()}" +
+  "document.readyState==='loading'?document.addEventListener('DOMContentLoaded',run):run()}catch(e){}})();";
+
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
   const locale = await getLocale();
   return (
@@ -46,6 +53,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
       <head>
         {/* Capture the PWA install prompt before the app bundle loads; Chrome fires it only once per page load. */}
         <script dangerouslySetInnerHTML={{ __html: INSTALL_PROMPT_CAPTURE }} />
+        <script dangerouslySetInnerHTML={{ __html: DEMO_TIMER }} />
       </head>
       <body className="min-h-dvh">
         <Providers locale={locale}>{children}</Providers>
