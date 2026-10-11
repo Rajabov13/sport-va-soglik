@@ -570,7 +570,7 @@ export const uz: Dictionary = {
     installHint: "Tez kirish uchun QO‘LLAB ni bosh ekranga qoʻshing",
     installButton: "Oʻrnatish",
     installStepsIos: "iPhone/iPad’da: saytni Safari’da oching, “Ulashish” (□↑) tugmasini bosing va “Bosh ekranga qoʻshish”ni tanlang.",
-    installStepsManual: "Brauzer menyusini (⋮) oching va “Ilovani oʻrnatish” yoki “Bosh ekranga qoʻshish”ni tanlang.",
+    installStepsManual: "Kompyuterda: manzil satrining o‘ng tomonidagi “Oʻrnatish” (⊕) belgisini bosing. Telefonda: brauzer menyusini (⋮) oching va “Ilovani oʻrnatish” yoki “Bosh ekranga qoʻshish”ni tanlang. Agar bu bandlar boʻlmasa, ilova allaqachon oʻrnatilgan yoki brauzeringiz oʻrnatishni qoʻllamaydi — Chrome’da oching.",
   },
   map: {
     title: "Yordam xaritasi",
