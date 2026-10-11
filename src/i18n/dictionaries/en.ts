@@ -567,8 +567,6 @@ export const en = {
     install: "Install app",
     installHint: "Add QO‘LLAB to your home screen for quick access",
     installButton: "Install",
-    installStepsIos: "On iPhone/iPad: open this site in Safari, tap the Share button (□↑) and choose “Add to Home Screen”.",
-    installStepsManual: "On a computer: click the “Install” (⊕) icon on the right of the address bar. On a phone: open the browser menu (⋮) and choose “Install app” or “Add to Home screen”. If neither is there, the app is already installed or your browser doesn't support installing — open the site in Chrome.",
   },
   map: {
     title: "Help map",
