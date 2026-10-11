@@ -5,46 +5,48 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>QO‘LLAB — Taqdimot</title>
 <style>
-:root{--bg:#0b1220;--fg:#f8fafc;--muted:#94a3b8;--acc:#22c55e;--acc2:#38bdf8;--warn:#f59e0b;--bad:#ef4444}
+:root{--bg:hsl(40 20% 98%);--fg:hsl(232 35% 14%);--muted:hsl(230 10% 40%);--card:#fff;--border:hsl(230 18% 89%);--primary:hsl(238 62% 38%);--primary-soft:hsl(236 80% 96%);--acc:hsl(152 62% 36%);--acc-soft:hsl(145 60% 94%);--warn:hsl(36 92% 46%);--bad:hsl(0 72% 48%);--r:0.85rem;--shadow:0 1px 2px rgba(16,24,40,.04),0 4px 16px -4px rgba(16,24,40,.08);--lift:0 2px 4px rgba(16,24,40,.04),0 12px 32px -8px rgba(30,27,75,.18)}
 *{box-sizing:border-box;margin:0;padding:0}
-html,body{height:100%;background:var(--bg);color:var(--fg);font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;overflow:hidden}
-#start{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:24px;z-index:50;background:radial-gradient(circle at 30% 20%,#14532d 0,var(--bg) 60%)}
-#start h1{font-size:clamp(40px,8vw,96px);letter-spacing:2px}
+html,body{height:100%;background:var(--bg);color:var(--fg);font-family:"Inter Variable","Inter",system-ui,sans-serif;font-feature-settings:"cv11","ss01";-webkit-font-smoothing:antialiased;overflow:hidden}
+h1,h2{letter-spacing:-.025em;text-wrap:balance}
+#start{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:24px;z-index:50;background:radial-gradient(circle at 20% 15%,var(--primary-soft) 0,transparent 45%),radial-gradient(circle at 85% 85%,var(--acc-soft) 0,transparent 40%),var(--bg)}
+#start h1{font-size:clamp(40px,8vw,96px);font-weight:800;color:var(--primary)}
 #start p{color:var(--muted);font-size:20px;text-align:center;padding:0 16px}
-.btn{background:var(--acc);color:#052e16;border:0;border-radius:14px;padding:16px 36px;font-size:22px;font-weight:700;cursor:pointer}
-.btn.ghost{background:transparent;color:var(--fg);border:2px solid #334155;font-size:16px;padding:10px 18px}
+.btn{background:var(--primary);color:#fff;border:0;border-radius:var(--r);padding:16px 36px;font-size:22px;font-weight:600;cursor:pointer;box-shadow:var(--lift);font-family:inherit}
+.btn.ghost{background:var(--card);color:var(--fg);border:1px solid var(--border);font-size:16px;padding:10px 18px;box-shadow:var(--shadow)}
 .lang{display:flex;gap:8px}
-.lang button.on{border-color:var(--acc);color:var(--acc)}
+.lang button.on{border-color:var(--primary);color:var(--primary);background:var(--primary-soft)}
 .slide{position:fixed;inset:0;display:flex;flex-direction:column;justify-content:center;padding:6vh 8vw;opacity:0;transform:translateY(30px);transition:.7s;pointer-events:none}
 .slide.on{opacity:1;transform:none;pointer-events:auto}
-.kicker{color:var(--acc);font-weight:700;text-transform:uppercase;letter-spacing:3px;font-size:clamp(14px,1.6vw,20px);margin-bottom:18px}
-.slide h2{font-size:clamp(34px,5.5vw,76px);line-height:1.08;margin-bottom:28px;max-width:1100px}
-.slide p.big{font-size:clamp(20px,2.4vw,34px);color:#cbd5e1;max-width:1000px;line-height:1.4}
+.kicker{align-self:flex-start;color:var(--primary);background:var(--primary-soft);border-radius:999px;padding:6px 14px;font-weight:600;text-transform:uppercase;letter-spacing:2px;font-size:clamp(13px,1.4vw,17px);margin-bottom:18px}
+.slide h2{font-size:clamp(34px,5.5vw,76px);font-weight:800;line-height:1.08;margin-bottom:28px;max-width:1100px}
+.slide p.big{font-size:clamp(20px,2.4vw,34px);color:var(--muted);max-width:1000px;line-height:1.4}
 .emoji{font-size:clamp(60px,9vw,120px);margin-bottom:12px}
 .flow{display:flex;flex-wrap:wrap;gap:12px;margin-top:10px}
-.flow span{background:#1e293b;border:1px solid #334155;border-radius:999px;padding:12px 20px;font-size:clamp(16px,1.8vw,24px)}
-.flow span.g{background:#14532d;border-color:var(--acc)}
+.flow span{background:var(--card);border:1px solid var(--border);box-shadow:var(--shadow);border-radius:999px;padding:12px 20px;font-size:clamp(16px,1.8vw,24px);font-weight:500}
+.flow span.g{background:var(--acc-soft);border-color:var(--acc);color:var(--acc)}
 .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:18px;margin-top:10px}
-.card{background:#111c30;border:1px solid #1e3a5f;border-radius:20px;padding:24px}
-.card b{display:block;font-size:clamp(38px,4.5vw,64px);color:var(--acc2);line-height:1}
+.card{background:var(--card);border:1px solid var(--border);border-radius:calc(var(--r) + 8px);padding:24px;box-shadow:var(--shadow)}
+.card b{display:block;font-size:clamp(38px,4.5vw,64px);font-weight:800;color:var(--primary);line-height:1}
 .card small{display:block;color:var(--muted);margin-top:10px;font-size:clamp(15px,1.4vw,19px)}
-.bar{height:16px;border-radius:8px;background:#1e293b;overflow:hidden;margin:6px 0 16px}
-.bar i{display:block;height:100%;background:linear-gradient(90deg,var(--acc),var(--acc2));width:0;transition:width 1.6s ease}
+.bar{height:16px;border-radius:8px;background:hsl(230 25% 95%);overflow:hidden;margin:6px 0 16px}
+.bar i{display:block;height:100%;background:linear-gradient(90deg,var(--primary),var(--acc));width:0;transition:width 1.6s ease}
 .row{display:flex;justify-content:space-between;font-size:clamp(15px,1.6vw,22px)}
-#timer{position:fixed;top:18px;right:18px;z-index:40;background:rgba(15,23,42,.92);border:2px solid var(--acc);border-radius:16px;padding:10px 18px;text-align:right;min-width:150px;display:none}
-#timer .t{font-size:40px;font-weight:800;font-variant-numeric:tabular-nums;line-height:1}
+.row b{color:var(--primary)}
+#timer{position:fixed;top:18px;right:18px;z-index:40;background:var(--card);border:2px solid var(--primary);border-radius:var(--r);box-shadow:var(--lift);padding:10px 18px;text-align:right;min-width:150px;display:none}
+#timer .t{font-size:40px;font-weight:800;font-variant-numeric:tabular-nums;line-height:1;color:var(--primary)}
 #timer .ph{font-size:13px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-top:4px}
 #timer.warn{border-color:var(--warn)}#timer.warn .t{color:var(--warn)}
 #timer.bad{border-color:var(--bad)}#timer.bad .t{color:var(--bad);animation:blink 1s infinite}
 @keyframes blink{50%{opacity:.4}}
-#progress{position:fixed;left:0;bottom:0;height:6px;background:var(--acc);z-index:40;width:0;transition:width 1s linear}
+#progress{position:fixed;left:0;bottom:0;height:6px;background:linear-gradient(90deg,var(--primary),var(--acc));z-index:40;width:0;transition:width 1s linear}
 #dots{position:fixed;bottom:22px;left:50%;transform:translateX(-50%);display:flex;gap:8px;z-index:30}
-#dots i{width:10px;height:10px;border-radius:50%;background:#334155}#dots i.on{background:var(--acc)}
+#dots i{width:10px;height:10px;border-radius:50%;background:var(--border)}#dots i.on{background:var(--primary)}
 #site{position:fixed;inset:0;display:none;z-index:20;background:#fff}
 #site iframe{width:100%;height:100%;border:0}
 #site .open{position:fixed;left:18px;top:18px;z-index:41}
 #end{position:fixed;inset:0;display:none;z-index:45;flex-direction:column;align-items:center;justify-content:center;gap:20px;background:var(--bg);text-align:center;padding:16px}
-#end h2{font-size:clamp(44px,8vw,110px)}
+#end h2{font-size:clamp(44px,8vw,110px);font-weight:800;color:var(--primary)}
 @media (max-width:600px){#timer{top:10px;right:10px;min-width:0;padding:6px 10px}#timer .t{font-size:26px}.slide{padding:80px 16px}}
 </style>
 </head>
@@ -65,7 +67,7 @@ html,body{height:100%;background:var(--bg);color:var(--fg);font-family:system-ui
 
 <div id="site">
   <iframe id="frame" title="QO‘LLAB" allow="geolocation"></iframe>
-  <a class="btn ghost open" id="openTab" target="_blank" rel="noopener" style="background:#0b1220;text-decoration:none"></a>
+  <a class="btn ghost open" id="openTab" target="_blank" rel="noopener" style="text-decoration:none"></a>
 </div>
 
 <div id="end">
@@ -173,9 +175,9 @@ function render(left){
 }
 function toSite(){
   if(phase!=="pres") return;
-  phase="demo"; clearInterval(timer);
-  // The site refuses to be embedded, so go there directly; it shows the remaining countdown itself.
-  location.href = SITE + "#demo=" + (Date.now() + (TOTAL - Math.max(elapsed, PRES)) * 1000);
+  phase="demo"; elapsed=Math.max(elapsed,PRES);
+  $("#slides").style.display=$("#dots").style.display="none";
+  $("#frame").src=SITE; $("#site").style.display="block";
 }
 function finish(){
   clearInterval(timer); phase="end";
