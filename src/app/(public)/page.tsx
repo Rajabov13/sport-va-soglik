@@ -7,7 +7,7 @@ import { FadeIn } from "@/components/shared/motion";
 import { DynamicIcon } from "@/components/shared/icons";
 import { HeroVisual, type HeroRequest } from "@/features/landing/hero-visual";
 import { getT, getLocale } from "@/i18n/server";
-import { getImpactStats, getLeaderboard } from "@/server/services/stats";
+import { getPublicImpactStats, getPublicLeaderboard } from "@/server/services/stats";
 import { listCampaigns } from "@/server/services/organizations";
 import { db } from "@/server/db";
 import { categoryName, formatNumber } from "@/lib/format";
@@ -39,8 +39,8 @@ export default async function LandingPage() {
   const [t, locale, stats, leaders, campaigns, hero, categories] = await Promise.all([
     getT(),
     getLocale(),
-    getImpactStats(),
-    getLeaderboard(3),
+    getPublicImpactStats(),
+    getPublicLeaderboard(3),
     listCampaigns({ status: "ACTIVE", page: 1, pageSize: 3 }),
     heroRequest(),
     db.category.findMany({ where: { isActive: true, deletedAt: null }, orderBy: { sortOrder: "asc" }, include: { _count: { select: { requests: { where: { status: { not: "DRAFT" }, deletedAt: null } } } } } }),

@@ -6,12 +6,12 @@ import { LanguageSwitcher } from "@/components/shared/language-switcher";
 import { getT } from "@/i18n/server";
 import { getCurrentUser } from "@/server/auth/current-user";
 import { homeForRole } from "@/server/auth/redirects";
-import { getImpactStats } from "@/server/services/stats";
+import { getPublicImpactStats } from "@/server/services/stats";
 
 export default async function AuthLayout({ children }: { children: React.ReactNode }) {
   const user = await getCurrentUser();
   if (user) redirect(homeForRole(user.role));
-  const [t, stats] = await Promise.all([getT(), getImpactStats()]);
+  const [t, stats] = await Promise.all([getT(), getPublicImpactStats()]);
   return (
     <div className="grid min-h-dvh lg:grid-cols-[1fr_1.1fr]">
       <aside className="relative hidden overflow-hidden bg-primary p-10 text-primary-foreground lg:flex lg:flex-col">

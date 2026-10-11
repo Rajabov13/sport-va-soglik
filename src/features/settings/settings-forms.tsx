@@ -1,4 +1,5 @@
 "use client";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Controller, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -140,18 +141,29 @@ export function PasswordForm({ hasPassword }: { hasPassword: boolean }) {
 
 export function InstallCard() {
   const { t } = useI18n();
-  const { canInstall, install, installed } = useInstallPrompt();
+  const { install, installed, platform } = useInstallPrompt();
+  const [showSteps, setShowSteps] = useState(false);
   if (installed) return null;
+  const onClick = async () => {
+    if (!(await install())) setShowSteps(true);
+  };
   return (
     <Card>
-      <CardContent className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between sm:p-6">
-        <div>
-          <p className="font-semibold">{t("settings.install")}</p>
-          <p className="text-sm text-muted-foreground">{t("settings.installHint")}</p>
+      <CardContent className="flex flex-col gap-3 p-4 sm:p-6">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <p className="font-semibold">{t("settings.install")}</p>
+            <p className="text-sm text-muted-foreground">{t("settings.installHint")}</p>
+          </div>
+          <Button variant="soft" onClick={onClick}>
+            <Download /> {t("settings.installButton")}
+          </Button>
         </div>
-        <Button variant="soft" onClick={install} disabled={!canInstall}>
-          <Download /> {t("settings.installButton")}
-        </Button>
+        {showSteps && platform !== "native" && (
+          <p role="status" className="rounded-xl bg-muted p-3 text-sm">
+            {t(platform === "ios" ? "settings.installStepsIos" : "settings.installStepsManual")}
+          </p>
+        )}
       </CardContent>
     </Card>
   );

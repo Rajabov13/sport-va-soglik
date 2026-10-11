@@ -1,4 +1,5 @@
 import { Prisma } from "@prisma/client";
+import { unstable_cache } from "next/cache";
 import { db } from "@/server/db";
 import { startOfToday } from "@/lib/format";
 
@@ -155,3 +156,11 @@ export async function getLeaderboard(limit = 10) {
     ratingAvg: r.ratingAvg,
   }));
 }
+
+/**
+ * Cached platform-wide numbers for public pages. These run a dozen aggregate queries, so we
+ * reuse the result for 60s instead of hitting the database on every visit.
+ */
+export const getPublicImpactStats = unstable_cache(() => getImpactStats(), ["public-impact-stats"], { revalidate: 60 });
+export const getPublicChartData = unstable_cache((weeks: number) => getChartData(weeks), ["public-chart-data"], { revalidate: 300 });
+export const getPublicLeaderboard = unstable_cache((limit: number) => getLeaderboard(limit), ["public-leaderboard"], { revalidate: 60 });

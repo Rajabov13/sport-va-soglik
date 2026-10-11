@@ -569,6 +569,8 @@ export const uz: Dictionary = {
     install: "Ilovani oʻrnatish",
     installHint: "Tez kirish uchun QO‘LLAB ni bosh ekranga qoʻshing",
     installButton: "Oʻrnatish",
+    installStepsIos: "iPhone/iPad’da: saytni Safari’da oching, “Ulashish” (□↑) tugmasini bosing va “Bosh ekranga qoʻshish”ni tanlang.",
+    installStepsManual: "Brauzer menyusini (⋮) oching va “Ilovani oʻrnatish” yoki “Bosh ekranga qoʻshish”ni tanlang.",
   },
   map: {
     title: "Yordam xaritasi",

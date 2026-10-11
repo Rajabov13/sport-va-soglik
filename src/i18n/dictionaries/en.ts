@@ -567,6 +567,8 @@ export const en = {
     install: "Install app",
     installHint: "Add QO‘LLAB to your home screen for quick access",
     installButton: "Install",
+    installStepsIos: "On iPhone/iPad: open this site in Safari, tap the Share button (□↑) and choose “Add to Home Screen”.",
+    installStepsManual: "Open your browser menu (⋮) and choose “Install app” or “Add to Home screen”.",
   },
   map: {
     title: "Help map",
