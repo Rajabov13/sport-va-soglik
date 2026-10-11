@@ -7,6 +7,11 @@ function bool(value: string | undefined, fallback = false) {
   return value === "true" || value === "1";
 }
 
+/** Trims whitespace and surrounding quotes that often sneak in when pasting values into a dashboard. */
+function cleanSecret(v: string | undefined) {
+  return (v ?? "").trim().replace(/^["']|["']$/g, "").trim();
+}
+
 export const env = {
   nodeEnv: process.env.NODE_ENV ?? "development",
   isProd: process.env.NODE_ENV === "production",
@@ -16,8 +21,8 @@ export const env = {
   demoMode: bool(process.env.DEMO_MODE),
   demoPassword: process.env.DEMO_PASSWORD ?? "",
   google: {
-    clientId: process.env.GOOGLE_CLIENT_ID ?? "",
-    clientSecret: process.env.GOOGLE_CLIENT_SECRET ?? "",
+    clientId: cleanSecret(process.env.GOOGLE_CLIENT_ID),
+    clientSecret: cleanSecret(process.env.GOOGLE_CLIENT_SECRET),
   },
   storage: {
     driver: (process.env.STORAGE_DRIVER ?? "local") as "local" | "supabase",
