@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogTitle, DialogTrigger, SheetContent } from "@/components/ui/dialog";
 import { Logo } from "@/components/shared/logo";
 import { LanguageSwitcher } from "@/components/shared/language-switcher";
+import { InstallButton } from "@/components/shared/install-button";
 import { useSession } from "@/components/shared/session";
 import { useI18n } from "@/i18n/provider";
 import { cn } from "@/lib/utils";
@@ -46,6 +47,7 @@ export function PublicHeader() {
           ))}
         </nav>
         <div className="ml-auto flex items-center gap-1.5">
+          <InstallButton />
           <LanguageSwitcher />
           {user ? (
             <>

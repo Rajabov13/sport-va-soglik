@@ -36,10 +36,17 @@ export const viewport: Viewport = {
   viewportFit: "cover",
 };
 
+const INSTALL_PROMPT_CAPTURE =
+  "window.addEventListener('beforeinstallprompt',function(e){e.preventDefault();window.__qollabInstall=e;window.dispatchEvent(new Event('qollab-installable'))});";
+
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
   const locale = await getLocale();
   return (
     <html lang={locale}>
+      <head>
+        {/* Capture the PWA install prompt before the app bundle loads; Chrome fires it only once per page load. */}
+        <script dangerouslySetInnerHTML={{ __html: INSTALL_PROMPT_CAPTURE }} />
+      </head>
       <body className="min-h-dvh">
         <Providers locale={locale}>{children}</Providers>
       </body>

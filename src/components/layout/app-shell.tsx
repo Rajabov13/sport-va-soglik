@@ -7,6 +7,7 @@ import { Dialog, DialogTitle, DialogTrigger, SheetContent } from "@/components/u
 import { Button } from "@/components/ui/button";
 import { Logo } from "@/components/shared/logo";
 import { LanguageSwitcher } from "@/components/shared/language-switcher";
+import { InstallButton } from "@/components/shared/install-button";
 import { useSession } from "@/components/shared/session";
 import { useI18n } from "@/i18n/provider";
 import { useSummary } from "@/hooks/use-summary";
@@ -151,6 +152,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           </Dialog>
           <Logo href={home} label={t("brand.name")} className="lg:hidden [&>span]:hidden min-[380px]:[&>span]:inline" />
           <div className="ml-auto flex items-center gap-1">
+            <InstallButton />
             <LanguageSwitcher />
             <Button variant="ghost" size="icon" asChild className="relative">
               <Link href="/dashboard/notifications" aria-label={t("notifications.open")}>

@@ -1,7 +1,5 @@
 "use client";
 import { useEffect } from "react";
-// Loaded app-wide so the install prompt is captured on whichever page the browser fires it.
-import "@/hooks/use-install-prompt";
 
 export function ServiceWorkerRegister() {
   useEffect(() => {

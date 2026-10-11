@@ -6,15 +6,11 @@ interface BeforeInstallPromptEvent extends Event {
   userChoice: Promise<{ outcome: "accepted" | "dismissed" }>;
 }
 
-// Chrome can fire `beforeinstallprompt` before React mounts, so capture it as soon as this module loads.
-let deferred: BeforeInstallPromptEvent | null = null;
-const listeners = new Set<() => void>();
-if (typeof window !== "undefined") {
-  window.addEventListener("beforeinstallprompt", (e) => {
-    e.preventDefault();
-    deferred = e as BeforeInstallPromptEvent;
-    listeners.forEach((l) => l());
-  });
+// The event is captured by an inline script in the root layout (it can fire before React mounts).
+declare global {
+  interface Window {
+    __qollabInstall?: BeforeInstallPromptEvent | null;
+  }
 }
 
 function isStandalone() {
@@ -27,13 +23,13 @@ export function useInstallPrompt() {
   const [installed, setInstalled] = useState(false);
   useEffect(() => {
     setInstalled(isStandalone());
-    setEvent(deferred);
-    const update = () => setEvent(deferred);
+    setEvent(window.__qollabInstall ?? null);
+    const update = () => setEvent(window.__qollabInstall ?? null);
     const onInstalled = () => setInstalled(true);
-    listeners.add(update);
+    window.addEventListener("qollab-installable", update);
     window.addEventListener("appinstalled", onInstalled);
     return () => {
-      listeners.delete(update);
+      window.removeEventListener("qollab-installable", update);
       window.removeEventListener("appinstalled", onInstalled);
     };
   }, []);
@@ -44,7 +40,7 @@ export function useInstallPrompt() {
       if (!event) return false;
       await event.prompt();
       await event.userChoice;
-      deferred = null;
+      window.__qollabInstall = null;
       setEvent(null);
       return true;
     },
