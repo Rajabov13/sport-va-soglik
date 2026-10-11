@@ -8,7 +8,7 @@ const csp = [
   "default-src 'self'",
   "script-src 'self' 'unsafe-inline'" + (isProd ? "" : " 'unsafe-eval'"),
   "style-src 'self' 'unsafe-inline'",
-  "img-src 'self' data: blob: https://*.tile.openstreetmap.org https://*.basemaps.cartocdn.com https://api.maptiler.com https://lh3.googleusercontent.com",
+  "img-src 'self' data: blob: https://tile.openstreetmap.org https://*.tile.openstreetmap.org https://*.basemaps.cartocdn.com https://api.maptiler.com https://lh3.googleusercontent.com",
   "font-src 'self' data:",
   "connect-src 'self'",
   "frame-ancestors 'none'",
