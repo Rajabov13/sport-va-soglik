@@ -41,6 +41,10 @@ export const env = {
     upstashUrl: process.env.UPSTASH_REDIS_REST_URL ?? "",
     upstashToken: process.env.UPSTASH_REDIS_REST_TOKEN ?? "",
   },
+  telegram: {
+    botToken: cleanSecret(process.env.TELEGRAM_BOT_TOKEN),
+    webhookSecret: cleanSecret(process.env.TELEGRAM_WEBHOOK_SECRET),
+  },
   ai: {
     geminiApiKey: process.env.GEMINI_API_KEY ?? "",
     geminiModel: process.env.GEMINI_MODEL ?? "gemini-flash-latest",
